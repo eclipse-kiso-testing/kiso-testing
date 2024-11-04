@@ -109,7 +109,7 @@ def test_check_file_extension(mocker):
 def test_check_and_handle_unresolved_threads_no_unresolved_threads(mocker):
     log_mock = mocker.MagicMock()
     mocker.patch("pykiso.cli.active_threads", return_value=[])
-    cli.check_and_handle_unresolved_threads(log_mock)
+    cli.check_and_handle_unresolved_threads(log_mock, 0)
     log_mock.warning.assert_not_called()
     log_mock.fatal.assert_not_called()
 
@@ -118,7 +118,7 @@ def test_check_and_handle_unresolved_threads_with_unresolved_threads_resolved_be
     log_mock = mocker.MagicMock()
     mocker.patch("pykiso.cli.active_threads", side_effect=[["Thread-1"], []])
     mocker.patch("time.sleep", return_value=None)
-    cli.check_and_handle_unresolved_threads(log_mock, timeout=5)
+    cli.check_and_handle_unresolved_threads(log_mock, 0, timeout=5)
     log_mock.warning.assert_called()
     log_mock.fatal.assert_not_called()
 
@@ -129,10 +129,10 @@ def test_check_and_handle_unresolved_threads_with_unresolved_threads_not_resolve
     mocker.patch("threading.active_count", return_value=2)
     mocker.patch("time.sleep", return_value=None)
     os_mock = mocker.patch("os._exit", return_value=None)
-    cli.check_and_handle_unresolved_threads(log_mock, timeout=5)
+    cli.check_and_handle_unresolved_threads(log_mock, 0, timeout=5)
     log_mock.warning.assert_called()
     log_mock.fatal.assert_called()
-    os_mock.assert_called_with(cli.test_execution.ExitCode.UNRESOLVED_THREADS)
+    os_mock.assert_called_with(0)
 
 
 def test_active_threads(mocker):
@@ -144,5 +144,5 @@ def test_active_threads(mocker):
     other_thread.configure_mock(name="Thread-1")
 
     mocker.patch("threading.enumerate", return_value=[main_thread, other_thread])
-    actual = cli.active_threads()
+    actual = [thread[0] for thread in cli.active_threads()]
     assert actual == ["Thread-1"]
