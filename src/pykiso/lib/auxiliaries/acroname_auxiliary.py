@@ -72,7 +72,7 @@ class AcronameAuxiliary(AuxiliaryInterface):
     MICROVOLT_TO_UNIT = {"uV": 1, "mV": 1e-3, "V": 1e-6}
     MICROAMP_TO_UNIT = {"uA": 1, "mA": 1e-3, "A": 1e-6}
 
-    def __init__(self, serial_number: str = None, **kwargs):
+    def __init__(self, serial_number: str | int = 0, **kwargs):
         """Constructor
 
         :param serial_number: serial number to connect to as hex string. Example "0x66F4859B"
