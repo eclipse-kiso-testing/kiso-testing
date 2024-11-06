@@ -89,10 +89,13 @@ def check_file_extension(click_context: click.Context, param: click.Parameter, p
     return paths
 
 
-def active_threads() -> list[list[str]]:
-    """Get the names of all active threads except the main thread."""
+def active_threads() -> list[tuple[str, str]]:
+    """Get the names and current execution frame of all active threads except the main thread.
+
+    :return: The the thread name and the frame of the thread
+    """
     frames = sys._current_frames()
-    return [[thread.name, str(frames.get(thread.ident))] for thread in threading.enumerate()][1:]
+    return [(thread.name, str(frames.get(thread.ident))) for thread in threading.enumerate()][1:]
 
 
 def check_and_handle_unresolved_threads(log: logging.Logger, exit_code: int, timeout: int = 10) -> None:
@@ -111,13 +114,13 @@ def check_and_handle_unresolved_threads(log: logging.Logger, exit_code: int, tim
     running_threads = active_threads()
 
     if len(running_threads) > 0:
-        for thread in running_threads:
-            log.warning(f"Unresolved thread {thread[0]} is still running. Frame: {thread[1]}")
+        for thread_name, frame in running_threads:
+            log.warning(f"Unresolved thread {thread_name} is still running. Frame: {frame}")
         log.warning(f"Wait {timeout}s for unresolved threads to be terminated.")
         time.sleep(timeout)
         if threading.active_count() > 1:
             log.fatal(
-                f"Unresolved threads {', '.join([thread[0] for thread in active_threads()])} are still running after {timeout} seconds. Force pykiso to Exit."
+                f"Unresolved threads {', '.join([thread_name for thread_name, _ in active_threads()])} are still running after {timeout} seconds. Force pykiso to Exit."
             )
             os._exit(exit_code)
         else:
