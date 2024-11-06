@@ -74,6 +74,14 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
     is_flag=True,
     required=False,
 )
+@click.option(
+    "-i",
+    "--import-description",
+    help="Import the test function description as the xray ticket description",
+    is_flag=True,
+    required=False,
+    default=True,
+)
 @click.pass_context
 def cli_upload(
     ctx,
@@ -82,11 +90,14 @@ def cli_upload(
     project_key: str,
     test_execution_name: str,
     merge_xml_files: bool,
+    import_description: bool,
 ) -> None:
     """Upload the JUnit xml test results on xray."""
     # From the JUnit xml files found, create a temporary file to keep only the test results marked with an xray decorator.
     path_results = Path(path_results).resolve()
-    test_results = extract_test_results(path_results=path_results, merge_xml_files=merge_xml_files)
+    test_results = extract_test_results(
+        path_results=path_results, merge_xml_files=merge_xml_files, update_description=import_description
+    )
 
     responses = []
     for result in test_results:

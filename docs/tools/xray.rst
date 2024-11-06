@@ -27,6 +27,7 @@ Options:
                                 test results [optional][default value: None]
   --test-execution-name TEXT    Xray test execution name that will be created [optional][default value: None]
   --merge-xml-files             Merge all the xml files to be send in one xml file
+  --import-description          Import the test function description as the xray ticket description
   --help                        Show this message and exit.
 
 
