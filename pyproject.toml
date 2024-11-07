@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.30.0"
+version = "0.30.1"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"

@@ -24,7 +24,9 @@ import logging
 import queue
 import threading
 from enum import Enum, unique
-from typing import Any, Callable, List, Optional, Self
+from typing import Any, Callable, List, Optional
+
+from typing_extensions import Self
 
 from pykiso.test_setup.config_registry import ConfigRegistry
 
