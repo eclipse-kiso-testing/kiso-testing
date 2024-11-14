@@ -41,7 +41,7 @@ class CCTcpip(CChannel):
         super().__init__(**kwargs)
         self.dest_ip = dest_ip
         self.dest_port = int(dest_port)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket: socket.socket | None = None
         self.max_msg_size = max_msg_size
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
@@ -50,13 +50,16 @@ class CCTcpip(CChannel):
     def _cc_open(self) -> None:
         """Connect to socket with configured port and IP address."""
         log.internal_info(f"Connection to socket at address {self.dest_ip} port {self.dest_port}")
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(3)
         self.socket.connect((self.dest_ip, self.dest_port))
 
     def _cc_close(self) -> None:
         """Close UDP socket."""
-        log.internal_info(f"Disconnect from socket at address {self.dest_ip}, port {self.dest_port}")
-        self.socket.close()
+        if self.socket:
+            log.internal_info(f"Disconnect from socket at address {self.dest_ip}, port {self.dest_port}")
+            self.socket.close()
+            self.socket = None
 
     def _cc_send(self, msg: bytes or str, **kwargs) -> None:
         """Send a message via socket.
@@ -64,6 +67,8 @@ class CCTcpip(CChannel):
         :param msg: message to send
         :param kwargs: not used
         """
+        if not self.socket:
+            raise TypeError("Channel must be opened before messages can be sent")
         if isinstance(msg, str):
             msg = msg.encode()
         log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
@@ -76,6 +81,9 @@ class CCTcpip(CChannel):
 
         :return: Message if successful, otherwise none
         """
+        if not self.socket:
+            raise TypeError("Channel must be opened before messages can be received")
+
         self.socket.settimeout(timeout or self.timeout)
 
         try:

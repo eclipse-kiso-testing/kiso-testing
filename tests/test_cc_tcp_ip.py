@@ -68,7 +68,6 @@ def test_constructor(constructor_params):
     assert socket_connector.dest_ip == constructor_params["ip"]
     assert socket_connector.dest_port == constructor_params["port"]
     assert socket_connector.max_msg_size == constructor_params["max_msg_size"]
-    assert isinstance(socket_connector.socket, socket.socket)
     assert socket_connector.timeout == 1e-6
 
 
@@ -97,7 +96,7 @@ def test__cc_close(mock_socket, constructor_params):
     """Test _cc_close"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
-
+    socket_connector.open()
     socket_connector._cc_close()
     mock_socket.socket.socket.close.assert_called_once()
 
@@ -118,6 +117,7 @@ def test__cc_send(
     """Test _cc_send"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
+    socket_connector.open()
     socket_connector._cc_send(msg_to_send)
     mock_socket.socket.socket.send.assert_called_once_with(expected_sent_message)
 
@@ -137,6 +137,9 @@ def test__cc_receive(
     """Test _cc_receive"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
+    socket_connector.open()
+
+    socket_connector.socket.settimeout.reset_mock()
     response = socket_connector._cc_receive(timeout=timeout)
     if not is_raw:
         response["msg"] = response.get("msg").decode().strip()
@@ -156,6 +159,7 @@ def test__cc_receive_with_errors(
     """Test _cc_receive with errors"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
+    socket_connector.open()
 
     # using max_msg_size attribute tu trigger exceptions in mock
     for err in errors_to_catch:
