@@ -49,6 +49,8 @@ class CCTcpip(CChannel):
 
     def _cc_open(self) -> None:
         """Connect to socket with configured port and IP address."""
+        if self.socket:
+            return
         log.internal_info(f"Connection to socket at address {self.dest_ip} port {self.dest_port}")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(3)
