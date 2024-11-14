@@ -10,10 +10,13 @@
 import importlib
 import logging
 import sys
+import time
+from pathlib import Path
 from unittest import mock
 
 import can as python_can
 import pytest
+from freezegun import freeze_time
 
 from pykiso import Message
 from pykiso.lib.connectors.cc_socket_can import cc_socket_can
@@ -160,6 +163,32 @@ def test_cc_open(logging_requested, mock_can_bus, mocker):
         assert isinstance(can_inst.logger, mocker.MagicMock)
         assert mock_logger.mock_calls[1] == mock.call().start()
         mock_logger.assert_called_once()
+
+@freeze_time("2015-10-21")
+@pytest.mark.parametrize(
+    "trace_path_dir, trace_path_dir_expected,log_name, log_name_expected",
+    [
+
+        ("./some_directory",Path().resolve()/"some_directory","CanLog.trc","CanLog.trc"),
+        ("/some_directory",Path("/some_directory").resolve(),"CanLog.trc","CanLog.trc"),
+        ("/some_directory/rama/",Path("/some_directory/rama/").resolve(),"CanLog.trc","CanLog.trc"),
+
+        ("./some_directory/log.trc",Path().resolve()/"some_directory",None,"log.trc"), # if trace_path_dir is a file ignore log_name
+        ("./some_directory/log.trc",Path().resolve()/"some_directory","CanLog.trc","log.trc"), # if trace_path_dir is a file ignore log_name
+        ("./some_directory",Path().resolve()/"some_directory","CanLog","CanLog.trc"), # trc suffix shall be added when not specified
+    ],
+)
+def test_log_path(trace_path_dir,trace_path_dir_expected,log_name,log_name_expected,mocker):
+    mock_mkdir = mocker.patch("pathlib.Path.mkdir")
+    can_inst = CCSocketCan(logging_activated=True,trace_path=trace_path_dir,log_name=log_name)
+
+    frozen_time = "" if  str(trace_path_dir).endswith(".trc") else time.strftime(f"%Y-%m-%d_%H-%M-%S_")
+
+    assert can_inst.trace_path == trace_path_dir_expected
+    assert can_inst.log_name == frozen_time + log_name_expected
+
+    assert can_inst.log_name.endswith(".trc")
+    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
 
 def test_cc_open_wrong_os(mocker):

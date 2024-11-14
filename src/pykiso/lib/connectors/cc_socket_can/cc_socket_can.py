@@ -54,15 +54,15 @@ class CCSocketCan(CChannel):
     def __init__(
         self,
         channel: str = "vcan0",
-        remote_id: int = None,
+        remote_id: Optional[int] = None,
         is_fd: bool = True,
         enable_brs: bool = False,
-        can_filters: list = None,
+        can_filters: Optional[list] = None,
         is_extended_id: bool = False,
         receive_own_messages: bool = False,
         logging_activated: bool = False,
-        log_path: str = None,
-        log_name: str = None,
+        trace_path: Optional[str] = None,
+        log_name: Optional[str] = None,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -75,7 +75,7 @@ class CCSocketCan(CChannel):
         :param is_extended_id: this flag controls the size of the arbitration_id field
         :param receive_own_messages: if set transmitted messages will be received
         :param logging_activated: boolean used to enable logfile creation
-        :param log_path: trace directory path (absolute or relative)
+        :param trace_path: trace directory path (absolute or relative), if you set a trc file name, auto timestamp and log_name will be ignored
         :param log_name: trace full name (without file extension)
         """
         super().__init__(**kwargs)
@@ -89,29 +89,38 @@ class CCSocketCan(CChannel):
         self.logging_activated = logging_activated
         self.bus = None
         self.logger = None
-        self.log_path = log_path
-        self.log_name = log_name
+        self.trace_path = trace_path
+        self.log_name = log_name.strip(".trc") if log_name else None
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
 
         if self.logging_activated:
-            # Just avoid the case the given trace directory is None
-            self.log_path = "" if self.log_path is None else self.log_path
+            # if no trace path is given, take the root path (where pykiso is launched)
+            if self.trace_path is None or self.trace_path == "":
+                self.trace_path = Path().resolve()
+
             # if the given log path is not absolute add root path
             # (where pykiso is launched) otherwise take it as it is
-            dir_path = (
-                (Path() / self.log_path).resolve() if not Path(self.log_path).is_absolute() else Path(self.log_path)
+            self.trace_path = (
+                Path().resolve() / self.trace_path if not Path(self.trace_path).is_absolute() else Path(self.trace_path)
             )
-            # if no specific logging file name is given take the default one
-            self.log_name = (
-                time.strftime(f"%Y-%m-%d_%H-%M-%S_{self.log_name}.trc")
-                if self.log_name is not None
-                else time.strftime("%Y-%m-%d_%H-%M-%S_CanLog.trc")
-            )
-            # if path doesn't exists take root path (where pykiso is launched)
-            self.log_path = dir_path / self.log_name if dir_path.exists() else (Path() / self.log_name).resolve()
 
+            # if specify a trace path with a file name, take the parent directory, ignore log_name and use the trc file as given.
+            if self.trace_path.suffix == ".trc":
+                self.log_name = self.trace_path.with_suffix("").name
+                self.trace_path = self.trace_path.parent
+            else:  # add timestamp to the log name other wise use timestamp with default name
+                # add timestamp to the log name other wise use timestamp with default name
+                self.log_name = (
+                    time.strftime(f"%Y-%m-%d_%H-%M-%S_{self.log_name}")
+                    if self.log_name is not None
+                    else time.strftime("%Y-%m-%d_%H-%M-%S_CanLog")
+                )
+
+            # create the trace path if it does not exist
+            self.trace_path.mkdir(parents=True, exist_ok=True)
+            self.log_name = f"{self.log_name}.trc"
         if self.enable_brs and not self.is_fd:
             log.internal_warning("Bitrate switch will have no effect because option is_fd is set to false.")
 
@@ -130,8 +139,8 @@ class CCSocketCan(CChannel):
         )
 
         if self.logging_activated:
-            log.internal_info(f"Logging path for socketCAN set to {self.log_path} ")
-            self.logger = SocketCan2Trc(self.channel, str(self.log_path))
+            log.internal_info(f"Logging path for socketCAN set to {self.trace_path / self.log_name} ")
+            self.logger = SocketCan2Trc(self.channel, str(self.trace_path / self.log_name))
             self.logger.start()
 
     def _cc_close(self) -> None:
@@ -140,10 +149,10 @@ class CCSocketCan(CChannel):
         self.bus = None
 
         if self.logging_activated:
-            del self.logger
+            self.logger.stop()
             self.logger = None
 
-    def _cc_send(self, msg: MessageType, remote_id: Optional[int] = None, **kwargs) -> None:
+    def _cc_send(self, msg: MessageType, remote_id: int | None = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
         If remote_id parameter is not given take configured ones
 

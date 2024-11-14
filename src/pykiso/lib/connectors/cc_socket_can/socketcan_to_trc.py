@@ -90,7 +90,7 @@ class SocketCan2Trc(can.Listener):
         self.starttime = self.get_start_time()
         self.can_notifier = can.Notifier(self.bus, [self], timeout=1.0, loop=None)
 
-    def __del__(self):
+    def stop(self):
         """cleanup logger"""
         if not self.started:
             return
