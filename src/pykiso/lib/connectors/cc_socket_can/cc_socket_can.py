@@ -23,7 +23,7 @@ import logging
 import platform
 import time
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Literal, Optional, Union
 
 try:
     import can
@@ -63,6 +63,7 @@ class CCSocketCan(CChannel):
         logging_activated: bool = False,
         trace_path: Optional[str] = None,
         log_name: Optional[str] = None,
+        strategy_trc_file: Optional[Literal["testRun", "testCase"]] = None,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -91,42 +92,51 @@ class CCSocketCan(CChannel):
         self.logger = None
         self.trace_path = trace_path
         self.log_name = log_name.strip(".trc") if log_name else None
+        self.strategy_trc_file = strategy_trc_file
+        self.opened = False
+
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
 
         if self.logging_activated:
-            # if no trace path is given, take the root path (where pykiso is launched)
-            if self.trace_path is None or self.trace_path == "":
-                self.trace_path = Path().resolve()
-
-            # if the given log path is not absolute add root path
-            # (where pykiso is launched) otherwise take it as it is
-            self.trace_path = (
-                Path().resolve() / self.trace_path if not Path(self.trace_path).is_absolute() else Path(self.trace_path)
-            )
-
-            # if specify a trace path with a file name, take the parent directory, ignore log_name and use the trc file as given.
-            if self.trace_path.suffix == ".trc":
-                self.log_name = self.trace_path.with_suffix("").name
-                self.trace_path = self.trace_path.parent
-            else:  # add timestamp to the log name other wise use timestamp with default name
-                # add timestamp to the log name other wise use timestamp with default name
-                self.log_name = (
-                    time.strftime(f"%Y-%m-%d_%H-%M-%S_{self.log_name}")
-                    if self.log_name is not None
-                    else time.strftime("%Y-%m-%d_%H-%M-%S_CanLog")
-                )
-
-            # create the trace path if it does not exist
-            self.trace_path.mkdir(parents=True, exist_ok=True)
-            self.log_name = f"{self.log_name}.trc"
+            self.resolve_trace_path()
         if self.enable_brs and not self.is_fd:
             log.internal_warning("Bitrate switch will have no effect because option is_fd is set to false.")
 
+    def resolve_trace_path(self):
+        """Resolve the trace path and name of the file that will be created for the trace"""
+        # if no trace path is given, take the root path (where pykiso is launched)
+        if self.trace_path is None or self.trace_path == "":
+            self.trace_path = Path().resolve()
+
+        # if the given log path is not absolute add root path
+        # (where pykiso is launched) otherwise take it as it is
+        self.trace_path = (
+            Path().resolve() / self.trace_path if not Path(self.trace_path).is_absolute() else Path(self.trace_path)
+        )
+
+        # if specify a trace path with a file name, take the parent directory, ignore log_name and use the trc file as given.
+        if self.trace_path.suffix == ".trc":
+            self.log_name = self.trace_path.with_suffix("").name
+            self.trace_path = self.trace_path.parent
+        else:  # add timestamp to the log name other wise use timestamp with default name
+            # add timestamp to the log name other wise use timestamp with default name
+            self.log_name = (
+                time.strftime(f"%Y-%m-%d_%H-%M-%S_{self.log_name}")
+                if self.log_name is not None
+                else time.strftime("%Y-%m-%d_%H-%M-%S_CanLog")
+            )
+
+        # create the trace path if it does not exist
+        self.trace_path.mkdir(parents=True, exist_ok=True)
+        self.log_name = f"{self.log_name}.trc"
+
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate"""
-
+        if self.opened:
+            log.warning("Socket can is already opened")
+            return
         if not os_name() == "Linux":
             raise OSError("socketCAN is only available under linux.")
 
@@ -141,16 +151,23 @@ class CCSocketCan(CChannel):
         if self.logging_activated:
             log.internal_info(f"Logging path for socketCAN set to {self.trace_path / self.log_name} ")
             self.logger = SocketCan2Trc(self.channel, str(self.trace_path / self.log_name))
-            self.logger.start()
+            if self.strategy_trc_file is None:
+                self.logger.start()
+        self.opened = True
 
     def _cc_close(self) -> None:
         """Close the current can bus channel and close the log handler."""
+        if not self.opened:
+            log.warning("Socket can is already closed")
+            return
         self.bus.shutdown()
         self.bus = None
 
         if self.logging_activated:
             self.logger.stop()
             self.logger = None
+
+        self.opened = False
 
     def _cc_send(self, msg: MessageType, remote_id: int | None = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
@@ -197,3 +214,32 @@ class CCSocketCan(CChannel):
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
+
+    def stop_can_trace(self):
+        """
+        Stops the CAN trace if it is currently running.
+        :return: None
+        """
+        if not self.logging_activated or self.logger is None:
+            return
+
+        self.logger.stop()
+
+    def start_can_trace(self, trace_path: Optional[str] = None, log_name: Optional[str] = None) -> None:
+        """Start the trace and write to the trace path written or the log name.
+
+        :param trace_path: trace directory path (absolute or relative), if you set a trc file name, auto timestamp and log_name will be ignored,
+            if not defined, will keep the directory path given in the configuration
+        :param log_name: trace full name (without file extension)
+        """
+        if not self.logging_activated or self.logger is None:
+            return
+
+        if not self.logger.started:
+            self.log_name = log_name.strip(".trc") if log_name else None
+            if trace_path is not None:
+                self.trace_path = trace_path
+                self.resolve_trace_path()
+            log.internal_info(f"Logging path for socketCAN set to {self.trace_path / self.log_name} ")
+            self.logger.trc_file_name = str(self.trace_path / self.log_name)
+            self.logger.start()

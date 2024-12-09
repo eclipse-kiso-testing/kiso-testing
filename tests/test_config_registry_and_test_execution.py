@@ -33,6 +33,7 @@ from pykiso.lib.auxiliaries.dut_auxiliary import DUTAuxiliary
 from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_proxy import CCProxy
+from pykiso.lib.connectors.cc_socket_can import CCSocketCan
 from pykiso.test_coordinator import test_execution
 from pykiso.test_coordinator.test_execution import filter_test_modules_by_suite
 from pykiso.test_setup.config_registry import ConfigRegistry
@@ -1020,13 +1021,13 @@ def test_abort(mocker: MockerFixture, caplog):
             {
                 "connectors": {"dummychannel": {"type": "dummyType"}},
             },
-            None,
+            False,
         ),
         (
             {
                 "connectors": {"dummychannel": {"type": "pykiso.lib.connectors.cc_pcan_can:CCPCanCan"}},
             },
-            None,
+            False,
         ),
         (
             {
@@ -1037,18 +1038,18 @@ def test_abort(mocker: MockerFixture, caplog):
                     }
                 },
             },
-            "testRun",
+            True,
         ),
     ],
 )
-def test__retrieve_trc_file_strategy(config, expected_strategy):
-    strategy = test_execution._retrieve_trc_file_strategy(config)
-    assert expected_strategy == strategy
+def test__check_trace_file_strategy(config, expected_strategy: bool):
+    strategy = test_execution._check_trace_file_strategy(config)
+    assert expected_strategy is strategy
 
 
-def test__retrieve_trc_file_strategy_error_raised():
+def test__check_trace_file_strategy_error_raised():
     with pytest.raises(ValueError):
-        test_execution._retrieve_trc_file_strategy(
+        test_execution._check_trace_file_strategy(
             {
                 "connectors": {
                     "dummychannel": {
@@ -1060,7 +1061,7 @@ def test__retrieve_trc_file_strategy_error_raised():
         )
 
 
-def test__get_pcan_instance_no_instance_available(mocker: MockerFixture):
+def test__get_connector_instance_with_trace_file_strategy_no_instance_available(mocker: MockerFixture):
     auxiliaries = mocker.MagicMock(spec=DUTAuxiliary)
     auxiliaries.channel = None
     channel_name = "aux"
@@ -1068,71 +1069,85 @@ def test__get_pcan_instance_no_instance_available(mocker: MockerFixture):
     pykiso.auxiliaries = mocker.MagicMock()
     mocker.patch.object(pykiso.auxiliaries, channel_name, return_value=auxiliaries)
 
-    instance = test_execution._get_pcan_instance({"auxiliaries": {channel_name: None}})
+    instance = test_execution._get_connector_instance_with_trace_file_strategy({"auxiliaries": {channel_name: None}})
 
     assert instance == None
 
 
-def test__get_pcan_instance(mocker: MockerFixture):
+@pytest.mark.parametrize("channel_class", (CCPCanCan, CCSocketCan))
+def test__get_connector_instance_with_trace_file_strategy(
+    mocker: MockerFixture, channel_class: CCPCanCan | CCSocketCan
+):
     auxiliary = DUTAuxiliary()
-    auxiliary.channel = CCPCanCan()
+    auxiliary.channel = channel_class(strategy_trc_file="testCase")
     aux_name = "aux"
 
     pykiso.auxiliaries = mocker.Mock()
     pykiso.auxiliaries.aux = auxiliary
 
-    instance = test_execution._get_pcan_instance({"auxiliaries": {aux_name: None}})
+    instance = test_execution._get_connector_instance_with_trace_file_strategy({"auxiliaries": {aux_name: None}})
 
     assert instance == auxiliary.channel
 
 
-def test__get_pcan_instance_cc_proxy(mocker: MockerFixture):
+@pytest.mark.parametrize("channel_class", (CCPCanCan, CCSocketCan))
+def test__get_connector_instance_with_trace_file_strategy_cc_proxy(
+    mocker: MockerFixture, channel_class: CCPCanCan | CCSocketCan
+):
     auxiliary = DUTAuxiliary()
     auxiliary.channel = CCProxy()
     auxiliary.channel._proxy = mocker.Mock()
-    auxiliary.channel._proxy.channel = CCPCanCan()
+    auxiliary.channel._proxy.channel = channel_class(strategy_trc_file="testCase")
     aux_name = "aux"
 
     pykiso.auxiliaries = mocker.mock_module.Mock()
     pykiso.auxiliaries.aux = auxiliary
 
-    instance = test_execution._get_pcan_instance({"auxiliaries": {aux_name: None}})
+    instance = test_execution._get_connector_instance_with_trace_file_strategy({"auxiliaries": {aux_name: None}})
 
     assert instance == auxiliary.channel._proxy.channel
 
 
 @pytest.mark.parametrize("trc_file_strategy", ("testRun", None))
-def test_handle_pcan_trace_strategy_no_change(mocker: MockerFixture, trc_file_strategy):
+def test_handle_can_trace_strategy_no_change(mocker: MockerFixture, trc_file_strategy):
     mocked_test_suite = [mocker.MagicMock(spec=unittest.TestSuite)] * 4
-    mocker.patch.object(test_execution, "_retrieve_trc_file_strategy", return_value=trc_file_strategy)
-    mocker.patch.object(test_execution, "_get_pcan_instance", return_value=None)
+    mocker.patch.object(test_execution, "_check_trace_file_strategy", return_value=trc_file_strategy)
+    mocker.patch.object(test_execution, "_get_connector_instance_with_trace_file_strategy", return_value=None)
 
-    test_suite_returned = test_execution.handle_pcan_trace_strategy("config", mocked_test_suite)
+    test_suite_returned = test_execution.handle_can_trace_strategy("config", mocked_test_suite)
 
     assert mocked_test_suite == test_suite_returned
 
 
 @pytest.mark.parametrize("trc_file_strategy,nb_call_expected", (["testRun", 4], ["testCase", 1]))
-def test_handle_pcan_trace_strategy(mocker: MockerFixture, trc_file_strategy, nb_call_expected):
+def test_handle_can_trace_strategy(mocker: MockerFixture, trc_file_strategy, nb_call_expected):
     test_suite_mock = mocker.MagicMock(spec=unittest.TestSuite)
     test_case_mock = mocker.MagicMock(spec=unittest.TestCase)
+    channel_mock = mocker.MagicMock(spec=CCSocketCan)
+    channel_mock.strategy_trc_file = trc_file_strategy
     test_case_mock._testMethodName = "testName"
     test_suite_mock._tests = [test_case_mock]
     mocked_test_suite = [test_suite_mock] * 4
-    mocker.patch.object(test_execution, "_retrieve_trc_file_strategy", return_value=trc_file_strategy)
-    mocker.patch.object(test_execution, "_get_pcan_instance", return_value="dummy_channel")
-    start_pcan_trace_mock = mocker.patch.object(test_execution, "start_pcan_trace_decorator")
-    stop_pcan_trace_mock = mocker.patch.object(test_execution, "stop_pcan_trace_decorator")
+    mocker.patch.object(test_execution, "_check_trace_file_strategy", return_value=trc_file_strategy)
+    mocker.patch.object(test_execution, "_get_connector_instance_with_trace_file_strategy", return_value=channel_mock)
+    start_can_trace_mock = mocker.patch.object(test_execution, "start_can_trace_decorator")
+    stop_can_trace_mock = mocker.patch.object(test_execution, "stop_can_trace_decorator")
 
-    test_execution.handle_pcan_trace_strategy("config", mocked_test_suite)
+    test_execution.handle_can_trace_strategy("config", mocked_test_suite)
 
-    assert start_pcan_trace_mock.call_count == nb_call_expected
-    assert stop_pcan_trace_mock.call_count == nb_call_expected
+    assert start_can_trace_mock.call_count == nb_call_expected
+    assert stop_can_trace_mock.call_count == nb_call_expected
 
 
+@pytest.mark.parametrize(
+    "channel_class,expected_function", ([CCPCanCan, "start_pcan_trace"], [CCSocketCan, "start_can_trace"])
+)
 @pytest.mark.parametrize("opened", (True, False))
-def test_start_pcan_trace_decorator(mocker: MockerFixture, opened: bool):
-    pcan_mock = mocker.MagicMock(spec=CCPCanCan)
+def test_start_can_trace_decorator(
+    mocker: MockerFixture, opened: bool, channel_class: CCPCanCan | CCSocketCan, expected_function: str
+):
+    pcan_mock = mocker.MagicMock(spec=channel_class)
+    pcan_mock.__class__ == channel_class
     pcan_mock.opened = opened
     pcan_mock.trace_path = Path(".")
     trace_name = "file_name"
@@ -1140,27 +1155,32 @@ def test_start_pcan_trace_decorator(mocker: MockerFixture, opened: bool):
     def dummy_function():
         return "value"
 
-    dummy_function = test_execution.start_pcan_trace_decorator(dummy_function, pcan_mock, trace_name)
+    dummy_function = test_execution.start_can_trace_decorator(dummy_function, pcan_mock, trace_name)
 
     returned_value = dummy_function()
 
     assert returned_value == "value"
-    pcan_mock.start_pcan_trace.assert_called_once_with(trace_path=pcan_mock.trace_path / trace_name)
+    getattr(pcan_mock, expected_function).assert_called_once_with(trace_path=pcan_mock.trace_path / trace_name)
     if not opened:
         pcan_mock.open.assert_called_once()
     else:
         pcan_mock.open.assert_not_called()
 
 
-def test_stop_pcan_trace_decorator(mocker: MockerFixture):
-    pcan_mock = mocker.MagicMock(spec=CCPCanCan)
+@pytest.mark.parametrize(
+    "channel_class,expected_function", ([CCPCanCan, "stop_pcan_trace"], [CCSocketCan, "stop_can_trace"])
+)
+def test_stop_can_trace_decorator(
+    mocker: MockerFixture, channel_class: CCPCanCan | CCSocketCan, expected_function: str
+):
+    pcan_mock = mocker.MagicMock(spec=channel_class)
 
     def dummy_function():
         return "value"
 
-    dummy_function = test_execution.stop_pcan_trace_decorator(dummy_function, pcan_mock)
+    dummy_function = test_execution.stop_can_trace_decorator(dummy_function, pcan_mock)
 
     returned_value = dummy_function()
 
     assert returned_value == "value"
-    pcan_mock.stop_pcan_trace.assert_called_once_with()
+    getattr(pcan_mock, expected_function).assert_called_once_with()
