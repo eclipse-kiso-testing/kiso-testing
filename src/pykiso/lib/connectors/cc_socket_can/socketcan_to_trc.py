@@ -88,7 +88,6 @@ class SocketCan2Trc(can.Listener):
         self.can_name = can_name
         self.trc_file = sys.stdout
         self.starttime = self.get_start_time()
-        self.can_notifier = can.Notifier(self.bus, [self], timeout=1.0, loop=None)
 
     def stop(self):
         """cleanup logger"""
@@ -108,6 +107,8 @@ class SocketCan2Trc(can.Listener):
         """start logging"""
         if self.started:
             return
+
+        self.can_notifier = can.Notifier(self.bus, [self], timeout=1.0, loop=None)
         self.open_trc_file()
 
         self.starttime = self.get_start_time()
