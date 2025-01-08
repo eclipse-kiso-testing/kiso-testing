@@ -51,7 +51,7 @@ pykiso-python-uds = { version = "~3.2.0", optional = true }
 pyserial = { version = "^3.0", optional = true }
 PyVISA = { version = "^1.12.0", optional = true }
 PyVISA-py = { version = "~0.5.3", optional = true }
-python-can = { version = "^4.4.2", optional = true, extras = ["pcan,vector"] }
+python-can = { version = "~4.4.2", optional = true, extras = ["pcan,vector"] }
 defusedxml = "^0.7.1"
 packaging = "*"
 grpcio = { version = "^1.0.0", optional = true }

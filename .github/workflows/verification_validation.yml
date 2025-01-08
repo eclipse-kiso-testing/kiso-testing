@@ -32,7 +32,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install poetry
-        run: pip3 install poetry
+        run: pip3 install poetry==1.8.5
 
       # Runs the preparation
       - name: Prepare working environment
