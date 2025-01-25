@@ -826,7 +826,7 @@ def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
     cc_pcan._merge_trc()
 
-    with open(result_path, "r") as trc:
+    with open(result_path, "r", encoding='utf-8') as trc:
         result = trc.read()
 
     assert trc_merge_data == result
@@ -842,7 +842,7 @@ def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
     result_path = trc_files[0]
     cc_pcan._merge_trc()
 
-    with open(result_path, "r") as trc:
+    with open(result_path, "r", encoding='utf-8') as trc:
         result = trc.read()
 
     assert trc_merge_data == result
@@ -859,7 +859,7 @@ def test_merge_trc_with_old_file_version(trc_files_v1_1, mock_can_bus, mock_PCAN
     result_path = trc_files_v1_1[0]
     cc_pcan._merge_trc()
 
-    with open(result_path, "r") as trc:
+    with open(result_path, "r", encoding='utf-8') as trc:
         result = trc.read()
 
     assert trc_data_start_4 + trc_data_end == result
@@ -880,7 +880,7 @@ def test_merge_trc_with_multiple_dir(trc_files_different_directory, mock_can_bus
     cc_pcan._merge_trc()
 
     # Check if all the trace from the different repo has been merged in one file
-    with open(result_path, "r") as trc:
+    with open(result_path, "r", encoding='utf-8') as trc:
         result = trc.read()
     assert trc_merge_data == result
 

@@ -16,6 +16,7 @@ Welcome to pykiso's documentation!
     tools/index
     pytest/index
     robot_framework/index
+    pykiso_2_0/index
 
 Indices and tables
 ==================

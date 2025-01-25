@@ -28,3 +28,11 @@ The pykiso modules are now detached from the main testing framework.
 This enable users to define their hw setup and load it in python. The auxiliaries
 can now be used in a more flexible way in python.
 See :ref:`pykiso_as_simulator` for more details.
+
+pykiso modules exposition
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The pykiso modules can now be exposed via interfaces.
+The first implemented interface is REST based.
+This is an experimental feature.
+See :ref:`pykiso_exposed` for more details.

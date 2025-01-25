@@ -29,7 +29,7 @@ jobs:
       - name: Prerequisite installation
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install poetry
         run: pip3 install poetry
