@@ -9,6 +9,18 @@ Test Cases
 .. automodule:: pykiso.test_coordinator.test_case
     :members:
 
+Exposed Interface
+-----------------
+
+`pykiso` comes with some ready to use exposed interfaces.
+
+.. toctree::
+    :maxdepth: 3
+    :titlesonly:
+
+    expose/index
+
+
 Connectors
 ----------
 
