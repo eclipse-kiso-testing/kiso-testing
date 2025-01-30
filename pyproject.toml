@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "1.0.1"
+version = "1.1.0"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -31,33 +31,34 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-brainstem = "*"
-PyYAML = "^6.0"
-robotframework = "3.2.2"
-unittest-xml-reporting = "^3.2.0"
-click = ">=7.0.0,<9.0.0"
-tabulate = ">=0.8.9,<0.10.0"
-Jinja2 = ">=2.11.0,<4.0.0"
-MarkupSafe = "~2.0.1"                                                          # Allow support for Jinja2 between 2.11 < x < 3
-importlib-metadata = { version = ">=4.12,<7.0", python = "<3.8" }
-pyreadline3 = { version = "^3.4.1", python = "^3.5" }
-hidapi = ">=0.12,<0.15"
-rich = { version = "^13.2.0", optional = true }
-requests = { version = "^2.28.2", optional = true }
-isort = { version = ">=5.11.4", optional = true }
 black = { version = "*", optional = true }
-pylink-square = { version = "~1.2.0", optional = true }
+brainstem = "*"
+cantools = { version = "^39.4.2", python = ">=3.8,<4.0" }
+click = ">=7.0.0,<9.0.0"
+defusedxml = "^0.7.1"
+grpcio = { version = "^1.0.0", optional = true }
+hidapi = ">=0.12,<0.15"
+importlib-metadata = { version = ">=4.12,<7.0", python = "<3.8" }
+isort = { version = ">=5.11.4", optional = true }
+Jinja2 = ">=2.11.0,<4.0.0"
+junitparser = "^3.2.0"
+MarkupSafe = "~2.0.1"                                                          # Allow support for Jinja2 between 2.11 < x < 3
+packaging = "*"
+protobuf = { version = "^4.24.2", optional = true }
 pykiso-python-uds = { version = "~3.2.0", optional = true }
+pylink-square = { version = "~1.2.0", optional = true }
+pyreadline3 = { version = "^3.4.1", python = "^3.5" }
 pyserial = { version = "^3.0", optional = true }
+python-can = { version = "~4.4.2", optional = true, extras = ["pcan,vector"] }
 PyVISA = { version = "^1.12.0", optional = true }
 PyVISA-py = { version = "~0.5.3", optional = true }
-python-can = { version = "~4.4.2", optional = true, extras = ["pcan,vector"] }
-defusedxml = "^0.7.1"
-packaging = "*"
-grpcio = { version = "^1.0.0", optional = true }
-protobuf = { version = "^4.24.2", optional = true }
-cantools = { version = "^39.4.2", python = ">=3.8,<4.0" }
-junitparser = "^3.2.0"
+PyYAML = "^6.0"
+requests = { version = "^2.28.2", optional = true }
+rich = { version = "^13.2.0", optional = true }
+robotframework = "3.2.2"
+tabulate = ">=0.8.9,<0.10.0"
+unittest-xml-reporting = "^3.2.0"
+viztracer= { version = "^1.0.1", optional = true }
 
 [tool.poetry.extras]
 plugins = [
@@ -75,6 +76,7 @@ serial = ["pyserial"]
 grpc = ["grpcio", "protobuf"]
 testrail = ["rich", "requests"]
 pykitest = ["black", "isort"]
+profiling = ["viztracer"]
 all = [
     "pylink-square",
     "pykiso-python-uds",
@@ -88,6 +90,7 @@ all = [
     "black",
     "grpcio",
     "protobuf",
+    "viztracer",
 ]
 
 [tool.poetry.group.dev.dependencies]
