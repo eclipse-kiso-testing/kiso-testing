@@ -16,25 +16,26 @@ The `@profile` decorator can be used in two ways:
 - **Specifying** a file path**: Generates an uncompressed result file with the specified file path.
 - **Compressed output**: When `compress=True` is set, the output file is compressed into a `.cvf` format.
 
-Example Usage
--------------
+Decorator Example
+-----------------
 
-```python
-from pykiso.profiling import profile
+.. code:: python
 
-@profile
-def test_method():
-    pass
+    from pykiso.profiling import profile
 
-@profile("result.json")
-def test_method():
-    pass
+    @profile
+    def test_method():
+        pass
+
+    @profile("result.json")
+    def test_method():
+        pass
 
 
-@profile(compress=True)
-def test_method():
-    pass
-```
+    @profile(compress=True)
+    def test_method():
+        pass
+
 
 Using the `profile_manager`
 ===========================
@@ -43,16 +44,16 @@ If you want to profile a section of your code, you can use the `profile_manager`
 In this case, you need to specify the file path and whether to compress the output file.
 Everything inside the context manager will be profiled.
 
-Example Usage
--------------
+Context Manager Example
+-----------------------
 
-```python
-from pykiso.profiling import profile_manager
+.. code:: python
 
-def test_method():
-    with profile_manager("testrun2.json", compress=False):
-        time.sleep(1)
-```
+    from pykiso.profiling import profile_manager
+
+    def test_method():
+        with profile_manager("testrun2.json", compress=False):
+            time.sleep(1)
 
 Using the get_tracer() function
 ===============================
@@ -61,18 +62,20 @@ If you want to be in full control of the profiling process, you can use the `get
 It will return the viztracer.Tracer object, which you can use to start and stop the profiling process.
 To create a result file, you need to call the save() method on the Tracer object.
 
-Example Usage
--------------
-```python
-from pykiso.profiling import get_tracer
+Raw Viztracer Example
+---------------------
 
-def test_method():
-    tracer = get_tracer()
-    tracer.start()
-    time.sleep(1)
-    tracer.stop()
-    tracer.save("testrun3.json")
-```
+.. code:: python
+
+    from pykiso.profiling import get_tracer
+
+    def test_method():
+        tracer = get_tracer()
+        tracer.start()
+        time.sleep(1)
+        tracer.stop()
+        tracer.save("testrun3.json")
+
 
 Visualizing Profiling Results
 =============================
@@ -82,9 +85,10 @@ To analyze the generated result file, use the `vizviewer` command-line tool. Thi
 Running `vizviewer`
 -------------------
 
-```bash
-vizviewer <result_filename>.json
-```
+.. code:: bash
+
+    vizviewer <result_filename>.json
+
 
 Benefits of Profiling
 =====================
