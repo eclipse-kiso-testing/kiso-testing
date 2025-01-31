@@ -29,6 +29,8 @@ from typing import Dict, List, Optional, Tuple
 
 import click
 
+import pykiso.profiling  # noqa: needs to be imported to trace from the beginning
+
 from . import __version__
 from .config_parser import parse_config
 from .global_config import Grabber
@@ -58,7 +60,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
         try:
             key = user_args.pop(0)
             if not key.startswith("--") or "_" in key:
-                correct_key = f'{"" if key.startswith("--") else "--" }{key.replace("_","-")}'
+                correct_key = f'{"" if key.startswith("--") else "--"}{key.replace("_", "-")}'
                 raise click.NoSuchOption(option_name=key, possibilities=[correct_key])
 
             value = user_args.pop(0)

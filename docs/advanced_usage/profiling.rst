@@ -26,14 +26,52 @@ from pykiso.profiling import profile
 def test_method():
     pass
 
-@profile
-def test_method("result.json"):
+@profile("result.json")
+def test_method():
     pass
 
 
 @profile(compress=True)
 def test_method():
     pass
+```
+
+Using the `profile_manager`
+===========================
+
+If you want to profile a section of your code, you can use the `profile_manager` context manager.
+In this case, you need to specify the file path and whether to compress the output file.
+Everything inside the context manager will be profiled.
+
+Example Usage
+-------------
+
+```python
+from pykiso.profiling import profile_manager
+
+def test_method():
+    with profile_manager("testrun2.json", compress=False):
+        time.sleep(1)
+```
+
+Using the get_tracer() function
+===============================
+
+If you want to be in full control of the profiling process, you can use the `get_tracer()` function.
+It will return the viztracer.Tracer object, which you can use to start and stop the profiling process.
+To create a result file, you need to call the save() method on the Tracer object.
+
+Example Usage
+-------------
+```python
+from pykiso.profiling import get_tracer
+
+def test_method():
+    tracer = get_tracer()
+    tracer.start()
+    time.sleep(1)
+    tracer.stop()
+    tracer.save("testrun3.json")
 ```
 
 Visualizing Profiling Results
@@ -45,7 +83,7 @@ Running `vizviewer`
 -------------------
 
 ```bash
-vizviewer <result_filename>
+vizviewer <result_filename>.json
 ```
 
 Benefits of Profiling
@@ -56,3 +94,6 @@ Benefits of Profiling
 ✅ Gain insights through interactive visualization
 
 Start profiling today and take control of your test performance!
+
+.. note::
+    For more information on the `viztracer` tool, refer to the `viztracer documentation <https://viztracer.readthedocs.io/en/latest/>`_.
