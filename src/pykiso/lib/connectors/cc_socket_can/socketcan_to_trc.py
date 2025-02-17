@@ -205,7 +205,7 @@ class SocketCan2Trc(can.Listener):
         print(
             txt.format(
                 num=num,
-                time_msec=can_frame.timestamp - self.starttime,
+                time_msec=(can_frame.timestamp - self.starttime) * 1000,
                 type=self.get_type(can_frame),
                 can_id=can_frame.arbitration_id,
                 len=can_frame.dlc,
