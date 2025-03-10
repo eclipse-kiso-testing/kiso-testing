@@ -513,9 +513,7 @@ def generate_step_report(
             ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(elapsed_time, 2)
             if test_case in test_result.errors:
                 breakpoint()
-                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(
-                    test_case[1]
-                )
+                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(test_case[1])
                 ALL_STEP_REPORT[class_name]["succeed"] = False
 
     breakpoint()

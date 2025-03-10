@@ -55,11 +55,10 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
-from ..test_result.assert_step_report import (
+from ..test_result.assert_step_report import (  # generate_xray_results,
     StepReportData,
     assert_decorator,
     generate_step_report,
-    # generate_xray_results,
 )
 from ..test_result.text_result import BannerTestResult, ResultStream
 from ..test_result.xml_result import XmlTestResult
@@ -562,9 +561,7 @@ def handle_can_trace_strategy(
     return test_suites
 
 
-def _get_connector_instance_with_trace_file_strategy(
-    config: dict[str, Any]
-) -> Optional[Union[CCPCanCan, CCSocketCan]]:
+def _get_connector_instance_with_trace_file_strategy(config: dict[str, Any]) -> Optional[Union[CCPCanCan, CCSocketCan]]:
     """Get pcan and socket can channels from auxiliaries created from the Yaml
 
     :param config: dict from converted YAML config file
