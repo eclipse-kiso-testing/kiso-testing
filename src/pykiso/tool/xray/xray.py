@@ -4,6 +4,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import requests
+from requests.auth import AuthBase
 from junitparser.cli import merge as merge_junit_xml
 
 API_VERSION = "api/v2/"
@@ -11,6 +12,13 @@ API_VERSION = "api/v2/"
 
 class XrayException(Exception):
     """Raise when sending the post request is unsuccessful."""
+
+
+class ClientSecretXray(AuthBase):
+    def __init__(self, base_url: str, client_id: str, client_secret: str):
+        self.base_url = base_url
+        self.client_id = client_id
+        self.client_secret = client_secret
 
 
 class XrayPublisher:
@@ -55,7 +63,7 @@ class XrayPublisher:
         :return: the post request's header
         """
         headers = {"Authorization": "Bearer " + token}
-        headers["Content-Type"] = "test/xml"
+        headers["Content-Type"] = "text/xml"
         return headers
 
     def publish_xml_result(
@@ -99,7 +107,9 @@ class XrayPublisher:
 
         # construct the complete url to send the post request
         url_publisher = self.get_url(url_endpoint=url_endpoint)
+        url_publisher = "https://eu.xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=BOST3"
 
+        breakpoint()
         try:
             query_response = requests.post(url=url_publisher, headers=headers, data=data)
         except requests.exceptions.ConnectionError:

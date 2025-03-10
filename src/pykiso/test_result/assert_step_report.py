@@ -60,6 +60,7 @@ REPORT_KEYS = [
     "expected_result",
     "actual_result",
     "succeed",
+    "parameterized_test_name",
 ]
 DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
@@ -251,11 +252,11 @@ def _add_step(
     var_name: str,
     expected: typing.Any,
     received: typing.Any,
+    parameterized_test_name: str,
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
-
     ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1].append(
-        dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
+        dict(zip(REPORT_KEYS, [message, var_name, expected, received, True, parameterized_test_name]))
     )
 
 
@@ -388,6 +389,15 @@ def assert_decorator(assert_method: types.MethodType):
             # 1.4. Get Expected value
             expected = _get_expected(assert_name, arguments)
 
+            # 1.5. Get Parameterized Test name
+            parameterized_test_name = f_back.f_locals["self"]._testMethodName or ""
+
+            # 1.6. Get the failure message
+
+            if test_case_inst.failureException:
+                breakpoint()
+                failure_message = test_case_inst.step_report.last_error_message
+
             # 2. Update report data
             # 2.1 Ensure report ready for update
             _prepare_report(test_case_inst, test_name)
@@ -400,6 +410,7 @@ def assert_decorator(assert_method: types.MethodType):
                 var_name,
                 expected,
                 received,
+                parameterized_test_name,
             )
 
         except Exception as e:
@@ -501,9 +512,13 @@ def generate_step_report(
             ALL_STEP_REPORT[class_name]["time_result"]["End Time"] = stop_time
             ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(elapsed_time, 2)
             if test_case in test_result.errors:
-                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(test_case[1])
+                breakpoint()
+                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(
+                    test_case[1]
+                )
                 ALL_STEP_REPORT[class_name]["succeed"] = False
 
+    breakpoint()
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True)
     template = render_environment.get_template(REPORT_TEMPLATE)
