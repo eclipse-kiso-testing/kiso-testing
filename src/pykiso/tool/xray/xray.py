@@ -4,8 +4,8 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import requests
-from requests.auth import AuthBase
 from junitparser.cli import merge as merge_junit_xml
+from requests.auth import AuthBase
 
 API_VERSION = "api/v2/"
 
