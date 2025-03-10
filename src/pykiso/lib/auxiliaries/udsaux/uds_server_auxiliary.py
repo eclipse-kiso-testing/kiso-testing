@@ -185,6 +185,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             block_size,
             self.encode_stmin(stmin),
         ]
+        log.info(f"*********** flow_control_frame: {flow_control_frame}")
         self.transmit(flow_control_frame)
 
     def register_callback(

@@ -101,6 +101,7 @@ class TestInfo(xmlrunner.result._TestInfo):
         self._testMethodDoc = test_case._testMethodDoc
         # store extra tag
         self.test_ids = json.dumps(test_case.test_ids)
+        breakpoint()
 
     def __repr__(self) -> str:
         """Return the same representation as the one of unittest.TestCase.
@@ -166,6 +167,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         :param xml_document: xml document base
         """
         # call the original method
+        breakpoint()
         XmlTestResult.report_testcase(test_result, xml_testsuite, xml_document)
 
         # add user-defined properties to the test cases if any

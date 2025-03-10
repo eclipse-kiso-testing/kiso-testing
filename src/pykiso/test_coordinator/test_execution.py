@@ -55,7 +55,12 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
-from ..test_result.assert_step_report import StepReportData, assert_decorator, generate_step_report
+from ..test_result.assert_step_report import (
+    StepReportData,
+    assert_decorator,
+    generate_step_report,
+    # generate_xray_results,
+)
 from ..test_result.text_result import BannerTestResult, ResultStream
 from ..test_result.xml_result import XmlTestResult
 from . import test_suite
@@ -412,6 +417,7 @@ def execute(
     report_name: str = "",
     user_tags: Optional[Dict[str, List[str]]] = None,
     step_report: Optional[Path] = None,
+    xray_upload: bool = True,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
     junit_path: str = "reports",
@@ -489,6 +495,10 @@ def execute(
         if step_report is not None:
             generate_step_report(result, step_report)
 
+        if xray_upload is not None:
+            breakpoint()
+            # generate_xray_results(result)
+
         exit_code = failure_and_error_handling(result)
     except NameError:
         log.exception("Error occurred during tag evaluation.")
@@ -552,7 +562,9 @@ def handle_can_trace_strategy(
     return test_suites
 
 
-def _get_connector_instance_with_trace_file_strategy(config: dict[str, Any]) -> Optional[Union[CCPCanCan, CCSocketCan]]:
+def _get_connector_instance_with_trace_file_strategy(
+    config: dict[str, Any]
+) -> Optional[Union[CCPCanCan, CCSocketCan]]:
     """Get pcan and socket can channels from auxiliaries created from the Yaml
 
     :param config: dict from converted YAML config file

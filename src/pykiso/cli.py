@@ -307,6 +307,7 @@ def main(
                 yaml_name,
                 user_tags,
                 step_report,
+                True,
                 pattern,
                 failfast,
                 junit,
