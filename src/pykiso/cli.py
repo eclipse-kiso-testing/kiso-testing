@@ -26,7 +26,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import click
 
@@ -39,10 +39,6 @@ from .logging_initializer import change_logger_class, initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
-
-# from click._compat import get_text_stderr
-# from click.utils import echo
-
 
 UNRESOLVED_THREAD_TIMEOUT = 10
 
