@@ -509,6 +509,11 @@ def create_result_dictionary(  # noqa: C901 # TODO: reduce complexity
                                         "startDate": convert_time_to_xray_format(start_time),
                                         "finishDate": convert_time_to_xray_format(finish_date),
                                     }
+                                    test_dict = {
+                                        "testKey": step["properties"]["test_key"],
+                                        "comment": step["failure_log"],  # step["description"]
+                                        "status": convert_test_status_to_xray_format(step["succeed"]),
+                                    }
                                     xray_dict = {"info": info_dict, "tests": [test_dict]}
                                     # to send the test results to an existing test execution ticket
                                     if test_execution_id is not None:
@@ -641,6 +646,7 @@ def execute(
             xray_results = merge_results(xray_results)
             # upload to xray
             responses = []
+
             for xray_result in xray_results:
                 responses.append(
                     upload_test_results(base_url=base_url, user=user, password=password, results=xray_result)
