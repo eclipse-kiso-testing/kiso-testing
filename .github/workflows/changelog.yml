@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     # Only and only if we are on the main project master
-    if: github.repository == 'eclipse/kiso-testing' && github.ref == 'refs/heads/master'
+    if: github.repository == 'eclipse-kiso-testing/kiso-testing' && github.ref == 'refs/heads/master'
     name: Update changelog
     runs-on: ubuntu-latest
     steps:
