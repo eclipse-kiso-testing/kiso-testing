@@ -216,7 +216,7 @@ def test_generate(mocker, test_result):
     mock_path = mock.MagicMock()
     mocker.patch.object(pathlib.Path, "resolve", return_value=mock_path)
 
-    assert_step_report.generate_step_report(test_result, "step_report.html")
+    assert_step_report.generate_step_report_html(test_result, "step_report.html")
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -236,6 +236,11 @@ def test_add_step():
         "data_to_test",
         "Almost Equal to 4.5; with delta=1",
         4.5,
+        "test_assert_step_report_multi_input",
+        "None",
+        "test description",
+        {},
+        False,
     )
     assert len(steplist) == 1
 
@@ -347,7 +352,7 @@ def test_assert_decorator_step_report_message_deprecated(mocker, remote_test_cas
     expected_var = "Test"
     remote_test_case.assertEquals(var, expected_var, "not expected str")
 
-    assert step_result.call_count == 1
+    # assert step_result.call_count == 1
     step_result.assert_called_once_with(
         "RemoteTest",
         "test_assert_decorator_step_report_message_deprecated",
