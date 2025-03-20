@@ -417,16 +417,22 @@ def assert_decorator(assert_method: types.MethodType):
             expected = _get_expected(assert_name, arguments)
 
             # 1.5. Get Test name function whcich could be parameterized
-            test_name_function = f_back.f_locals["self"]._testMethodName or ""
+            test_name_function = (
+                f_back.f_locals.get("self", None)._testMethodName if f_back.f_locals.get("self", None) else ""
+            )
 
             # 1.6. Get the current description
-            description = f_back.f_locals["self"]._testMethodDoc or ""
+            description = f_back.f_locals.get("self", None)._testMethodDoc if f_back.f_locals.get("self", None) else ""
+            # description = f_back.f_locals["test_case"]._testMethodDoc or ""
 
             failure_log = failure_log = traceback.format_exc() if test_case_inst.failureException else "None"
 
             # 1.7. Get the test properties of the current test function
+            self_obj = f_back.f_locals.get("self", {})
             properties = (
-                f_back.f_locals["self"].properties if test_name in f_back.f_locals["self"]._testMethodName else {}
+                self_obj.properties
+                if hasattr(self_obj, "_testMethodName") and test_name in self_obj._testMethodName
+                else {}
             )
 
             # 1.8. is parameterized test?
