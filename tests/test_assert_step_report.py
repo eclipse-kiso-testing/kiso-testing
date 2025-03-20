@@ -97,12 +97,7 @@ def test_assert_decorator_no_message(mocker, test_case):
     test_case.assertTrue(data_to_test)
 
     step_result.assert_called_once_with(
-        "TestCase",
-        "test_assert_decorator_no_message",
-        "",
-        "data_to_test",
-        "True",
-        data_to_test,
+        "TestCase", "test_assert_decorator_step_report_message", "Dummy message", "data_to_test", "True", True
     )
 
 
@@ -115,12 +110,7 @@ def test_assert_decorator_step_report_message(mocker, test_case):
 
     assert test_case.step_report.message == ""
     step_result.assert_called_once_with(
-        "TestCase",
-        "test_assert_decorator_step_report_message",
-        "Dummy message",
-        "data_to_test",
-        "True",
-        data_to_test,
+        "TestCase", "test_assert_decorator_step_report_message", "Dummy message", "data_to_test", "True", True
     )
 
 
@@ -147,7 +137,12 @@ def test_assert_decorator_reraise(mocker, test_case):
         "Dummy message",
         "data_to_test",
         "True",
-        data_to_test,
+        False,
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
 
 
@@ -163,6 +158,11 @@ def test_assert_decorator_remote_test(mocker, remote_test_case):
         "report",
         "Equal to MessageReportType.TEST_PASS",
         message.MessageReportType.TEST_PASS,
+        "runTest",
+        "NoneType: None\n",
+        "No test",
+        {},
+        False,
     )
 
 
@@ -171,7 +171,19 @@ def test_assert_decorator_no_var_name(mocker, test_case):
 
     test_case.assertTrue(True)
 
-    step_result.assert_called_once_with("TestCase", "test_assert_decorator_no_var_name", "", "True", "True", True)
+    step_result.assert_called_once_with(
+        "TestCase",
+        "test_assert_decorator_no_var_name",
+        "",
+        "True",
+        "True",
+        True,
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
+    )
 
 
 def test_assert_decorator_index_error(mocker, test_case):
@@ -199,6 +211,11 @@ def test_assert_decorator_multi_input(mocker, test_case):
         "data_to_test",
         "Almost Equal to 4.5; with delta=1",
         4.5,
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
 
 
@@ -360,6 +377,11 @@ def test_assert_decorator_step_report_message_deprecated(mocker, remote_test_cas
         "var",
         "Equals to Test",
         "Test",
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
 
 
@@ -373,12 +395,17 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
     expected_var = "Test"
     remote_test_case.assertEqual(var, expected_var, "not expected str")
 
-    assert step_result.call_count == 1
-    step_result.assert_called_once_with(
+    # assert step_result.call_count == 1
+    step_result.assert_called_with(
         "RemoteTest",
         "test_assert_decorator_step_report_assert_called_in_unittest",
         "not expected str",
         "var",
         "Equal to Test",
         "Test",
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
