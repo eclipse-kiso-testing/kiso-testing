@@ -97,7 +97,17 @@ def test_assert_decorator_no_message(mocker, test_case):
     test_case.assertTrue(data_to_test)
 
     step_result.assert_called_once_with(
-        "TestCase", "test_assert_decorator_step_report_message", "Dummy message", "data_to_test", "True", True
+        "TestCase",
+        "test_assert_decorator_no_message",
+        "",
+        "data_to_test",
+        "True",
+        True,
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
 
 
@@ -110,7 +120,17 @@ def test_assert_decorator_step_report_message(mocker, test_case):
 
     assert test_case.step_report.message == ""
     step_result.assert_called_once_with(
-        "TestCase", "test_assert_decorator_step_report_message", "Dummy message", "data_to_test", "True", True
+        "TestCase",
+        "test_assert_decorator_step_report_message",
+        "Dummy message",
+        "data_to_test",
+        "True",
+        True,
+        "",
+        "NoneType: None\n",
+        "",
+        {},
+        False,
     )
 
 
