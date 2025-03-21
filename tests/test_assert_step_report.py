@@ -429,3 +429,133 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
         {},
         False,
     )
+
+
+@pytest.mark.parametrize(
+    "timestamp, expected_date",
+    [
+        (1638316800, "01/12/21 01:00:00"),
+        (1609459200, "01/01/21 01:00:00"),
+    ],
+)
+def test_parse_timestamp(timestamp, expected_date):
+    assert assert_step_report._parse_timestamp(timestamp) == expected_date
+
+
+@pytest.mark.parametrize(
+    "test_data, expected_result",
+    [
+        (
+            {"steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]], "unexpected_errors": [[]]},
+            True,
+        ),
+        (
+            {"steps": [[{"succeed": True}, {"succeed": False}, {"succeed": True}]], "unexpected_errors": [[]]},
+            False,
+        ),
+        (
+            {"steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]], "unexpected_errors": [["error"]]},
+            False,
+        ),
+        (
+            {"steps": [[]], "unexpected_errors": [[]]},
+            True,
+        ),
+    ],
+)
+def test_is_test_success_parametrized(test_data, expected_result):
+    assert assert_step_report.is_test_success(test_data) == expected_result
+
+
+def test_generate_step_report_xray(mocker, test_result):
+    mock_generate_all_step_report = mocker.patch("pykiso.test_result.assert_step_report.generate_all_step_report")
+    mock_generate_all_step_report.return_value = {"mocked_key": "mocked_value"}
+
+    result = assert_step_report.generate_step_report_xray(test_result)
+
+    mock_generate_all_step_report.assert_called_once_with(test_result=test_result)
+    assert result == {"mocked_key": "mocked_value"}
+
+
+def test_prepare_report_creates_test_class_entry(test_case):
+    test_name = "test_method"
+    assert_step_report._prepare_report(test_case, test_name)
+
+    test_class_name = type(test_case).__name__
+    assert test_class_name in assert_step_report.ALL_STEP_REPORT
+    assert "header" in assert_step_report.ALL_STEP_REPORT[test_class_name]
+    assert "description" in assert_step_report.ALL_STEP_REPORT[test_class_name]
+    assert "file_path" in assert_step_report.ALL_STEP_REPORT[test_class_name]
+    assert "time_result" in assert_step_report.ALL_STEP_REPORT[test_class_name]
+    assert "test_list" in assert_step_report.ALL_STEP_REPORT[test_class_name]
+
+
+def test_prepare_report_creates_test_method_entry(test_case):
+    test_name = "test_method"
+    assert_step_report._prepare_report(test_case, test_name)
+
+    test_class_name = type(test_case).__name__
+    assert test_name in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"]
+    assert "description" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
+    assert "steps" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
+    assert "unexpected_errors" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
+    assert "properties" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
+    assert "is_parameterized" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
+
+
+def test_prepare_report_does_not_override_existing_entries(test_case):
+    test_name = "test_method"
+    assert_step_report._prepare_report(test_case, test_name)
+
+    test_class_name = type(test_case).__name__
+    initial_header = assert_step_report.ALL_STEP_REPORT[test_class_name]["header"]
+    initial_description = assert_step_report.ALL_STEP_REPORT[test_class_name]["description"]
+
+    assert_step_report._prepare_report(test_case, test_name)
+
+    assert assert_step_report.ALL_STEP_REPORT[test_class_name]["header"] == initial_header
+    assert assert_step_report.ALL_STEP_REPORT[test_class_name]["description"] == initial_description
+
+
+def test_add_step_success():
+    test_class_name = "TestClass"
+    test_name = "test_method"
+    message = "Test message"
+    var_name = "var"
+    expected = "Expected value"
+    received = "Received value"
+    test_name_function = "test_method"
+    failure_log = "None"
+    description = "Test description"
+    properties = {}
+    is_parameterized = False
+
+    assert_step_report.ALL_STEP_REPORT[test_class_name] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {"steps": [[]]}
+
+    assert_step_report._add_step(
+        test_class_name,
+        test_name,
+        message,
+        var_name,
+        expected,
+        received,
+        test_name_function,
+        failure_log,
+        description,
+        properties,
+        is_parameterized,
+    )
+
+    step = assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][-1]
+    assert step["message"] == message
+    assert step["var_name"] == var_name
+    assert step["expected_result"] == expected
+    assert step["actual_result"] == received
+    assert step["succeed"] is True
+    assert step["test_name_function"] == test_name_function
+    assert step["failure_log"] == failure_log
+    assert step["description"] == description
+    assert step["properties"] == properties
+    assert step["is_parameterized"] == is_parameterized
