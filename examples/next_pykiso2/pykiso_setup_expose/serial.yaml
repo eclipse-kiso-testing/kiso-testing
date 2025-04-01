@@ -1,0 +1,12 @@
+auxiliaries:
+  com_aux_sender:
+    connectors:
+        com: loopback
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+  com_aux_receiver:
+    connectors:
+        com: loopback
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+connectors:
+  loopback:
+    type: pykiso.lib.connectors.cc_raw_loopback:CCLoopback

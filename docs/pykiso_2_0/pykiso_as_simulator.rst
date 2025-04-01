@@ -1,7 +1,7 @@
 .. _pykiso_as_simulator:
 
-** NEW ** Pykiso as a simulator
--------------------------------
+Pykiso as a simulator
+---------------------
 
 Introduction
 ~~~~~~~~~~~~
