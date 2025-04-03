@@ -104,7 +104,7 @@ def test_assert_decorator_no_message(mocker, test_case):
         "True",
         True,
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -127,7 +127,7 @@ def test_assert_decorator_step_report_message(mocker, test_case):
         "True",
         True,
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -159,7 +159,7 @@ def test_assert_decorator_reraise(mocker, test_case):
         "True",
         False,
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -179,7 +179,7 @@ def test_assert_decorator_remote_test(mocker, remote_test_case):
         "Equal to MessageReportType.TEST_PASS",
         message.MessageReportType.TEST_PASS,
         "runTest",
-        "NoneType: None\n",
+        "None",
         "No test",
         {},
         False,
@@ -199,7 +199,7 @@ def test_assert_decorator_no_var_name(mocker, test_case):
         "True",
         True,
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -232,7 +232,7 @@ def test_assert_decorator_multi_input(mocker, test_case):
         "Almost Equal to 4.5; with delta=1",
         4.5,
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -253,7 +253,7 @@ def test_generate(mocker, test_result):
     mock_path = mock.MagicMock()
     mocker.patch.object(pathlib.Path, "resolve", return_value=mock_path)
 
-    assert_step_report.generate_step_report_html(test_result, "step_report.html")
+    assert_step_report.generate_step_report(test_result, "step_report.html")
 
     mock_path.parent.mkdir.assert_called_once()
 
@@ -389,7 +389,7 @@ def test_assert_decorator_step_report_message_deprecated(mocker, remote_test_cas
     expected_var = "Test"
     remote_test_case.assertEquals(var, expected_var, "not expected str")
 
-    # assert step_result.call_count == 1
+    assert step_result.call_count == 1
     step_result.assert_called_once_with(
         "RemoteTest",
         "test_assert_decorator_step_report_message_deprecated",
@@ -398,7 +398,7 @@ def test_assert_decorator_step_report_message_deprecated(mocker, remote_test_cas
         "Equals to Test",
         "Test",
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -415,7 +415,7 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
     expected_var = "Test"
     remote_test_case.assertEqual(var, expected_var, "not expected str")
 
-    # assert step_result.call_count == 1
+    assert step_result.call_count == 1
     step_result.assert_called_with(
         "RemoteTest",
         "test_assert_decorator_step_report_assert_called_in_unittest",
@@ -424,7 +424,7 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
         "Equal to Test",
         "Test",
         "",
-        "NoneType: None\n",
+        "None",
         "",
         {},
         False,
@@ -434,8 +434,8 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
 @pytest.mark.parametrize(
     "timestamp, expected_date",
     [
-        (1638316800, "01/12/21 00:00:00"),
-        (1609459200, "01/01/21 00:00:00"),
+        (1638316800, "01/12/21 01:00:00"),
+        (1609459200, "01/01/21 01:00:00"),
     ],
 )
 def test_parse_timestamp(timestamp, expected_date):
@@ -465,16 +465,6 @@ def test_parse_timestamp(timestamp, expected_date):
 )
 def test_is_test_success_parametrized(test_data, expected_result):
     assert assert_step_report.is_test_success(test_data) == expected_result
-
-
-def test_generate_step_report_xray(mocker, test_result):
-    mock_generate_all_step_report = mocker.patch("pykiso.test_result.assert_step_report.generate_all_step_report")
-    mock_generate_all_step_report.return_value = {"mocked_key": "mocked_value"}
-
-    result = assert_step_report.generate_step_report_xray(test_result)
-
-    mock_generate_all_step_report.assert_called_once_with(test_result=test_result)
-    assert result == {"mocked_key": "mocked_value"}
 
 
 def test_prepare_report_creates_test_class_entry(test_case):

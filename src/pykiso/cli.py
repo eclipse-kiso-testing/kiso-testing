@@ -158,39 +158,6 @@ class CommandWithOptionalFlagValues(click.Command):
         return result_args
 
 
-def modify_usage_error(main_command):
-    """Modify the behavior of the UsageError exception to append the help menu to the error message.
-    This function overrides the `show` method of the `click.exceptions.UsageError` class to provide
-    additional context and instructions when a usage error occurs. If the error message contains
-    "--xray-upload", it provides specific instructions related to client_id, client_secret, and url.
-
-    :param main_command: The top-level group or command object constructed by the Click library.
-    """
-
-    def show(self, file=None):
-        if file is None:
-            file = click._compat.get_text_stderr()
-        color = None
-        if self.ctx is not None:
-            color = self.ctx.color
-            click.echo(self.ctx.get_usage() + "\n", file=file, color=color)
-        if "--xray-upload" in self.message:
-            click.echo(
-                "Error: %s In str format: client_id, client_secret and url.\n" % self.format_message(),
-                file=file,
-                color=color,
-            )
-        else:
-            click.echo(
-                "Error: %s \n" % self.format_message(),
-                file=file,
-                color=color,
-            )
-        sys.argv = [sys.argv[0]]
-
-    click.exceptions.UsageError.show = show
-
-
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
@@ -241,6 +208,12 @@ def modify_usage_error(main_command):
     help="generate the step report at the specified path",
 )
 @click.option(
+    "--save-step-report",
+    is_flag=True,
+    required=False,
+    help="save the pickling step report at the specified path",
+)
+@click.option(
     "--failfast",
     is_flag=True,
     help="stop the test run on the first error or failure",
@@ -265,20 +238,6 @@ def modify_usage_error(main_command):
     required=False,
     help="use the specified logger class in pykiso",
 )
-@click.option(
-    "--xray-upload",
-    nargs=3,
-    type=click.Tuple([str, str, str]),
-    required=False,
-    help="Upload the test results to Xray. Requires the username, password and url as arguments.",
-)
-@click.option(
-    "--test-execution-id",
-    nargs=1,
-    type=click.STRING,
-    required=False,
-    help="Test execution ID of Xray where to upload the test results. By default, a new test execution ticket is created except if the ID is given.",
-)
 @click.version_option(__version__)
 @click.pass_context
 @Grabber.grab_cli_config
@@ -289,13 +248,12 @@ def main(
     log_level: str = "INFO",
     report_type: str = "text",
     step_report: PathType | None = None,
+    save_step_report: bool = False,
     pattern: str | None = None,
     failfast: bool = False,
     verbose: bool = False,
     logger: str | None = None,
     junit: str | None = None,
-    xray_upload: Tuple[str, str, str] | None = None,
-    test_execution_id: str | None = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -313,13 +271,12 @@ def main(
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param step_report: file path for the step report or None
+    :param save_step_report: allow the user to save the step report in a pickle file
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
     :param logger: class of the logger that will be used in the tests
     :param junit: name or directory where to save test results in a junit xml report
-    :param xray_upload: tuple with the client_id, client_secret and url for the xray upload
-    :param test_execution_id: test execution ID of Xray where to upload the test results
     """
     # we are expecting one log file path or as many as the provided configuration files
     if log_path and len(log_path) not in (1, len(test_configuration_file)):
@@ -329,9 +286,6 @@ def main(
 
     if junit is not None:
         report_type = "junit"
-
-    if not xray_upload and test_execution_id:
-        raise click.UsageError("test-execution-id can not be used without the argument xray-upload")
 
     # parse provided tags (any unknown option)
     user_tags = eval_user_tags(click_context)
@@ -363,11 +317,10 @@ def main(
                 yaml_name,
                 user_tags,
                 step_report,
+                save_step_report,
                 pattern,
                 failfast,
                 junit,
-                xray_upload,
-                test_execution_id,
             )
 
         for handler in logging.getLogger().handlers:
@@ -377,6 +330,3 @@ def main(
         check_and_handle_unresolved_threads(log, exit_code=exit_code, timeout=UNRESOLVED_THREAD_TIMEOUT)
 
     sys.exit(exit_code)
-
-
-modify_usage_error(main)

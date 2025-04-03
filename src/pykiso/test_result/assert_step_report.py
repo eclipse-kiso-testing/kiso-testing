@@ -376,7 +376,7 @@ def assert_decorator(assert_method: types.MethodType):
             signature = inspect.signature(assert_method)
             arguments = signature.bind(*args, **kwargs).arguments
             test_name = test_case_inst.step_report.current_table or test_name
-            # 1. Gather message, var_name, expected, received
+            # 1. Gather message, var_name, expected, received, test_name_function, test_description, failure_log, ...
             # 1.1 Get message. default value: ""
             if test_case_inst.step_report.message:
                 message = test_case_inst.step_report.message
@@ -416,18 +416,20 @@ def assert_decorator(assert_method: types.MethodType):
             # 1.4. Get Expected value
             expected = _get_expected(assert_name, arguments)
 
-            # 1.5. Get Test name function whcich could be parameterized
+            # 1.5. Get Test name function which could be parameterized
             test_name_function = (
                 f_back.f_locals.get("self", None)._testMethodName if f_back.f_locals.get("self", None) else ""
             )
 
-            # 1.6. Get the current description
+            # 1.6. Get the current test description
             description = f_back.f_locals.get("self", None)._testMethodDoc if f_back.f_locals.get("self", None) else ""
-            # description = f_back.f_locals["test_case"]._testMethodDoc or ""
 
-            failure_log = failure_log = traceback.format_exc() if test_case_inst.failureException else "None"
+            # 1.7. Get the failure logs
+            failure_log = traceback.format_exc() if test_case_inst.failureException else "None"
+            if failure_log == "NoneType: None\n":
+                failure_log = "None"
 
-            # 1.7. Get the test properties of the current test function
+            # 1.8. Get the test properties of the current test function
             self_obj = f_back.f_locals.get("self", {})
             properties = (
                 self_obj.properties
@@ -435,7 +437,7 @@ def assert_decorator(assert_method: types.MethodType):
                 else {}
             )
 
-            # 1.8. is parameterized test?
+            # 1.9. is the test parameterized
             is_parameterized = test_name in test_name_function and len(test_name) < len(test_name_function)
 
             # 2. Update report data
@@ -510,13 +512,16 @@ jinja_template_functions = {
 }
 
 
-def generate_all_step_report(
+def generate_step_report(
     test_result: Union[BannerTestResult, XmlTestResult],
-):
-    """Generate all the step report from the test results
+    output_file: str,
+) -> OrderedDict:
+    """Generate the HTML step report based on Jinja2 template
 
     :param test_result: Result of tests to generate the report from
-    :param output_file: Step Report updated
+    :param output_file: Report output file path
+
+    :return: The ALL_STEP_REPORT dictionary
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
     test_result.stream.writeln("Generating step reports...")
@@ -574,42 +579,20 @@ def generate_all_step_report(
                             test_case[1]
                         )
                     ALL_STEP_REPORT[class_name]["succeed"] = False
-    return ALL_STEP_REPORT
-
-
-def generate_step_report_xray(
-    test_result: Union[BannerTestResult, XmlTestResult],
-) -> dict:
-    """Generate the step report dictionary for Xray
-
-    :param test_results: Result of tests to generate the report from
-    :return: The step report dictionary"""
-    return generate_all_step_report(test_result=test_result)
-
-
-def generate_step_report_html(
-    test_result: Union[BannerTestResult, XmlTestResult],
-    output_file: str,
-) -> None:
-    """Generate the HTML step report based on Jinja2 template
-
-    :param test_result: Result of tests to generate the report from
-    :param output_file: Report output file path
-    """
-
-    all_step_report = generate_all_step_report(test_result=test_result)
 
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True)
     template = render_environment.get_template(REPORT_TEMPLATE)
     template.globals.update(jinja_template_functions)
-    output_text = template.render({"ALL_STEP_REPORT": all_step_report})
+    output_text = template.render({"ALL_STEP_REPORT": ALL_STEP_REPORT})
 
     output_file = Path(output_file).resolve()
     output_file.parent.mkdir(parents=True, exist_ok=True)
     # Write the output into the output file
     with output_file.open("w") as report_file:
         report_file.write(output_text)
+
+    return ALL_STEP_REPORT
 
 
 def add_retry_information(
