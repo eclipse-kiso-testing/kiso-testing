@@ -525,11 +525,10 @@ def generate_step_report(
     :return: The ALL_STEP_REPORT dictionary
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
-    test_result.stream.writeln("Generating step reports...")
+    test_result.stream.writeln("Generating HTML reports...")
 
     succeeded_tests = test_result.successes + test_result.expectedFailures
     failed_test = test_result.failures + test_result.errors + test_result.unexpectedSuccesses
-
     # Update info for each test
     for test_case in succeeded_tests + failed_test:
         if isinstance(test_case, (TestCase, TestInfo)):
@@ -551,7 +550,6 @@ def generate_step_report(
             stop_time = _parse_timestamp(test_info.stop_time)
             elapsed_time = test_info.elapsed_time
             test_method_name = test_info._testMethodName
-
         elif isinstance(test_info, TestInfo):
             # test_info is TestInfo
             class_name = test_info.test_name.split(".")[-1]
@@ -592,7 +590,6 @@ def generate_step_report(
     # Write the output into the output file
     with output_file.open("w") as report_file:
         report_file.write(output_text)
-
     return all_step_report
 
 
