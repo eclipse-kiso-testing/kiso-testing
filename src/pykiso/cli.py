@@ -18,6 +18,7 @@ Integration Test Framework
 .. currentmodule:: cli
 
 """
+import getpass
 import logging
 import os
 import pprint
@@ -25,7 +26,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import click
 
@@ -204,7 +205,13 @@ class CommandWithOptionalFlagValues(click.Command):
     required=False,
     default=None,
     type=click.Path(writable=True),
-    help="generate the step report at the specified path",
+    help="generate the HTML step report at the specified path",
+)
+@click.option(
+    "--save-step-report",
+    is_flag=True,
+    required=False,
+    help="save a pickled step report at the same path specified for the HTML step report",
 )
 @click.option(
     "--failfast",
@@ -240,12 +247,13 @@ def main(
     log_path: Tuple[PathType] = None,
     log_level: str = "INFO",
     report_type: str = "text",
-    step_report: Optional[PathType] = None,
-    pattern: Optional[str] = None,
+    step_report: PathType | None = None,
+    save_step_report: bool = False,
+    pattern: str | None = None,
     failfast: bool = False,
     verbose: bool = False,
-    logger: Optional[str] = None,
-    junit: Optional[str] = None,
+    logger: str | None = None,
+    junit: str | None = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -263,10 +271,12 @@ def main(
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param step_report: file path for the step report or None
+    :param save_step_report: allow the user to save the step report in a pickle file
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
     :param logger: class of the logger that will be used in the tests
+    :param junit: name or directory where to save test results in a junit xml report
     """
     # we are expecting one log file path or as many as the provided configuration files
     if log_path and len(log_path) not in (1, len(test_configuration_file)):
@@ -307,6 +317,7 @@ def main(
                 yaml_name,
                 user_tags,
                 step_report,
+                save_step_report,
                 pattern,
                 failfast,
                 junit,
