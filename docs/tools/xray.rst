@@ -12,7 +12,7 @@ To upload your results to Xray users have to follow the command :
 
 .. code:: bash
 
-    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" --run--name "sample run" upload --path-results-junit "./junit_files" --path-results-pickle "./pickle_files"
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results-junit "./junit_files" --path-results-pickle "./pickle_files"
 
 
 Options:
@@ -30,8 +30,6 @@ Options:
   --import-description       To import the test description as the xray test ticket description [optional]
 
   --help                        Show this message and exit.
-
-.. code:: bash
 
 
 The above command will create a new test execution ticket on Xray side or overwrite an existing one with the test results.

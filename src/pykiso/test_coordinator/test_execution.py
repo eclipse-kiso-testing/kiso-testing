@@ -448,7 +448,7 @@ def execute(
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
 
-        # Enable step report if requested
+        # Enable step report
         enable_step_report(all_tests_to_run, step_report)
 
         if test_file_pattern.test_class:
