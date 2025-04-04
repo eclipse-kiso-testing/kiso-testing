@@ -434,8 +434,8 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
 @pytest.mark.parametrize(
     "timestamp, expected_date",
     [
-        (1638316800, "01/12/21 01:00:00"),
-        (1609459200, "01/01/21 01:00:00"),
+        (1638316800, "01/12/21 00:00:00"),
+        (1609459200, "01/01/21 00:00:00"),
     ],
 )
 def test_parse_timestamp(timestamp, expected_date):
