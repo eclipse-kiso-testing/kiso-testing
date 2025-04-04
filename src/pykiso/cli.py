@@ -205,13 +205,13 @@ class CommandWithOptionalFlagValues(click.Command):
     required=False,
     default=None,
     type=click.Path(writable=True),
-    help="generate the step report at the specified path",
+    help="generate the HTML step report at the specified path",
 )
 @click.option(
     "--save-step-report",
     is_flag=True,
     required=False,
-    help="save the pickling step report at the specified path",
+    help="save a pickled step report at the same path specified for the HTML step report",
 )
 @click.option(
     "--failfast",

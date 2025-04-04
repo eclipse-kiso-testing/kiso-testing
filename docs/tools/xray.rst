@@ -12,14 +12,26 @@ To upload your results to Xray users have to follow the command :
 
 .. code:: bash
 
-    --xray-upload CLIENT_ID CLIENT_SECRET XRAY_API_BASE_URL
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" --run--name "sample run" upload --path-results-junit "./junit_files" --path-results-pickle "./pickle_files"
+
 
 Options:
-  CLIENT_ID TEXT                Xray user id  [required]
-  CLIENT_SECRET TEXT            Valid Xray API key [required]
-  XRAY_API_BASE_URL TEXT        URL of Xray server  [required]
+  --user TEXT                Xray user id [required]
+  --password TEXT            Valid Xray API key (if not given ask at command prompt level)  [optional]
+  --url TEXT                 URL of Xray server  [required]
+
+  upload                     Upload the test results to Xray REST API endpoint [required]
+  --test-execution-id        Test execution ID where to upload the test results [optional]
+  --path-results-junit       Path to the junit files containing the test results reports [optional]
+  --path-results-pickle      Path to the pickle files containing the test results reports [optional]
+  --project-key              Project key [optional]
+  --test-execution-name      To rename the test execution ticket [optional]
+  --merge-xml-files          To merge several junit xml files [optional]
+  --import-description       To import the test description as the xray test ticket description [optional]
 
   --help                        Show this message and exit.
+
+.. code:: bash
 
 
 The above command will create a new test execution ticket on Xray side or overwrite an existing one with the test results.

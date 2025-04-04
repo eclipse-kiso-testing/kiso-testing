@@ -23,6 +23,7 @@ Create a Step report
 .. currentmodule:: assert_step_report
 
 """
+import copy
 import functools
 import inspect
 import linecache
@@ -579,7 +580,7 @@ def generate_step_report(
                             test_case[1]
                         )
                     ALL_STEP_REPORT[class_name]["succeed"] = False
-
+    all_step_report = copy.deepcopy(ALL_STEP_REPORT)
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True)
     template = render_environment.get_template(REPORT_TEMPLATE)
@@ -592,7 +593,7 @@ def generate_step_report(
     with output_file.open("w") as report_file:
         report_file.write(output_text)
 
-    return ALL_STEP_REPORT
+    return all_step_report
 
 
 def add_retry_information(
