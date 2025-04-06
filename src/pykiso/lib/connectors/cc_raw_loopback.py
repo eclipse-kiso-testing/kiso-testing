@@ -47,7 +47,7 @@ class CCLoopback(CChannel):
         """Close loopback channel."""
         self._loopback_buffer = None
 
-    def _cc_send(self, msg: MsgType) -> None:
+    def _cc_send(self, msg: MsgType, **kwargs) -> None:
         """Send a message by simply putting message in deque.
 
         :param msg: message to send, should be Message type or bytes.

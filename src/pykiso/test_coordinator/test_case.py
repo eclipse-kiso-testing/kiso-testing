@@ -18,7 +18,9 @@ Generic Test
 
 .. currentmodule:: test_case
 
-.. note:: TODO later on will inherit from a metaclass to get the id parameters
+.. note::
+    TODO later on will inherit from a metaclass to get the id parameters
+
 """
 from __future__ import annotations
 
@@ -28,14 +30,10 @@ import unittest
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
-import lxml
-import lxml.etree
-
 import pykiso.test_result.assert_step_report as step_report
 
 from .. import message
 from ..auxiliary import AuxiliaryInterface
-from ..logging_initializer import get_logging_options, initialize_logging
 from .test_message_handler import test_app_interaction
 
 if TYPE_CHECKING:
@@ -354,7 +352,7 @@ def retry_test_case(
                         step_report.add_retry_information(self, result_test, retry_nb, max_try, e)
 
                     # print counter only after failing test to avoid spamming the console
-                    log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
+                    log.info(f">>>>>>>>>> Attempt: {retry_nb + 1}/{max_try} <<<<<<<<<<")
 
         return func_wrapper
 

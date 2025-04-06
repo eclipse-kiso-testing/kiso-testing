@@ -307,16 +307,6 @@ def tmp_test(request, tmp_path, mocker):
     # use a common tmp_path for all test modules
     tmp_base = tmp_path.parent / "tests"
 
-    log_options = LogOptions(None, "ERROR", None, False)
-    mocker.patch(
-        "pykiso.test_coordinator.test_case.get_logging_options",
-        return_value=log_options,
-    )
-    mocker.patch(
-        "pykiso.test_coordinator.test_execution.get_logging_options",
-        return_value=log_options,
-    )
-
     aux1, aux2, should_fail = getattr(request, "param", ("dummy1", "dummy2", False))
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"
     ts_folder.mkdir(parents=True)
