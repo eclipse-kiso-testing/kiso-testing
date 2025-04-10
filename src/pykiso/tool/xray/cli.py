@@ -131,9 +131,9 @@ def cli_upload(
                     user=ctx.obj["USER"],
                     password=ctx.obj["PASSWORD"],
                     results=result,
-                    test_execution_id=test_execution_id,
-                    project_key=project_key,
-                    test_execution_name=test_execution_name,
+                    # test_execution_id=test_execution_id,
+                    # project_key=project_key,
+                    # test_execution_name=test_execution_name,
                 )
             )
         responses_result_str = json.dumps(responses, indent=2)

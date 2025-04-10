@@ -1,6 +1,6 @@
 """
-Create the Xray dictionary from the test result reports
-*******************************************************
+Create the Xray dictionary from the junit test results
+******************************************************
 
 :module: xray_report
 
@@ -10,8 +10,7 @@ Create the Xray dictionary from the test result reports
 
 """
 
-from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def convert_test_status_to_xray_format(is_successful: bool) -> str:
@@ -25,102 +24,6 @@ def convert_test_status_to_xray_format(is_successful: bool) -> str:
             return "PASSED"
         case False:
             return "FAILED"
-
-
-def convert_time_to_xray_format(original_time: str) -> str:
-    """
-    Converts a given time string from the format "dd/mm/yy HH:MM:SS" to the
-    format "YYYY-MM-DDTHH:MM:SS+0000" suitable for Xray.
-
-    :param original_time: The original time string in the format "dd/mm/yy HH:MM:SS".
-    :return: The converted time string in the format "YYYY-MM-DDTHH:MM:SS+0000".
-    """
-    converted_time = datetime.strptime(original_time, "%d/%m/%y %H:%M:%S")
-    return converted_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
-
-
-def create_result_dictionary(  # noqa: C901 # TODO: reduce complexity
-    test_execution_results: dict[str, OrderedDict], test_execution_id: None = None
-) -> list[dict]:
-    xray_result_dictionaries = []
-    collected_test_results = []
-
-    # collect only the test_list and the time_results information
-    for test_results in test_execution_results.values():
-        for key in test_results.keys():
-            tmp_dict = {}
-            if key == "test_list":
-                tmp_dict["test_list"] = test_results["test_list"]
-            elif key == "time_result":
-                tmp_dict["time_result"] = test_results["time_result"]
-            if len(tmp_dict) > 0:
-                collected_test_results.append(tmp_dict)
-
-    # build the xray result list with all the test results dictionaries
-    for test_result in collected_test_results:
-        if test_result.get("time_result") is not None:
-            start_time = test_result["time_result"]["Start Time"]
-            finish_date = test_result["time_result"]["End Time"]
-        for key in test_result.keys():
-            xray_dict = {
-                "info": {},
-                "tests": [],
-            }
-            if key == "test_list":
-                for test_steps_name in test_result[key].keys():
-                    # test_steps_name= setUp, test_1, tearDown, test_run
-                    for step_list in test_result[key][test_steps_name].get("steps"):
-                        for step in step_list:
-                            test_dict = {}
-                            if step["is_parameterized"]:
-                                # create one test execution ticket per parameterized test
-                                if "test_key" in step.get("properties", {}):  # has a test_key
-                                    # xray test ticket
-                                    test_dict = {
-                                        "testKey": step["properties"]["test_key"],
-                                        "comment": step["failure_log"],  # step["description"]
-                                        "status": convert_test_status_to_xray_format(step["succeed"]),
-                                    }
-
-                                    # xray test execution ticket
-                                    info_dict = {
-                                        "project": step["properties"]["test_key"].split("-")[0],
-                                        "summary": test_steps_name + " " + step["test_name_function"],
-                                        "description": step["description"],
-                                        # for all the test, should be per test function
-                                        "startDate": convert_time_to_xray_format(start_time),
-                                        "finishDate": convert_time_to_xray_format(finish_date),
-                                    }
-                                    xray_dict = {"info": info_dict, "tests": [test_dict]}
-                                    # to send the test results to an existing test execution ticket
-                                    if test_execution_id is not None:
-                                        xray_dict["testExecutionKey"] = test_execution_id
-                                    if len(xray_dict) == 0:
-                                        continue
-                                    xray_result_dictionaries.append(xray_dict)
-
-                            if not step["is_parameterized"]:
-                                # create one common test execution for all the tests
-                                if "test_key" in step.get("properties", {}):  # has a test_key
-                                    info_dict = {
-                                        "project": step["properties"]["test_key"].split("-")[0],
-                                        "summary": "Execution of the manual tests",
-                                        "description": "Description",
-                                        # for running all the tests
-                                        "startDate": convert_time_to_xray_format(start_time),
-                                        "finishDate": convert_time_to_xray_format(finish_date),
-                                    }
-                                    test_dict = {
-                                        "testKey": step["properties"]["test_key"],
-                                        "comment": step["failure_log"],  # step["description"]
-                                        "status": convert_test_status_to_xray_format(step["succeed"]),
-                                    }
-                                    xray_dict = {"info": info_dict, "tests": [test_dict]}
-                                    # to send the test results to an existing test execution ticket
-                                    if test_execution_id is not None:
-                                        xray_dict["testExecutionKey"] = test_execution_id
-                                    xray_result_dictionaries.append(xray_dict)
-    return xray_result_dictionaries
 
 
 def merge_results(test_results: list[dict]) -> None:
@@ -145,3 +48,143 @@ def merge_results(test_results: list[dict]) -> None:
             merged_results.append(new_entry)
 
     return merged_results
+
+
+def get_test_key_from_property(property: list) -> None | str:
+    """
+    Extracts the value of the "test_key" property from a list of property dictionaries.
+
+    :param property: A list of dictionaries, where each dictionary represents a property
+                         with "name" and "value" keys.
+
+    :return: None | str: The value of the "test_key" property if found, otherwise None.
+    """
+    test_key = None
+    for p in property:
+        if p["name"] == "test_key":
+            test_key = p["value"]
+            break
+    return test_key
+
+
+def compute_end_time(start_time: str, duration: float) -> str:
+    """
+    Computes the end time by adding a duration to a given start time.
+
+    :param start_time: The start time in ISO 8601 format (e.g., "YYYY-MM-DDTHH:MM:SS").
+                       If the timezone offset is not provided, "+0000" (UTC) is assumed.
+    :param duration: The duration in seconds to add to the start time.
+    :return: The computed end time in ISO 8601 format with a "+0000" timezone offset.
+    """
+    if "+" not in start_time:
+        start_time += "+0000"
+    start_time_obj = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S+0000")
+    end_time_obj = start_time_obj + timedelta(seconds=duration)
+    return end_time_obj.replace(microsecond=0).isoformat() + "+0000"
+
+
+def convert_time_to_xray_format(original_time: str) -> str:
+    """
+    Converts a given time string from the format "YYYY-MM-DDTHH:MM:SS" to the
+    format "YYYY-MM-DDTHH:MM:SS+0000" by appending the UTC offset.
+
+    :param original_time: The original time string in the format "YYYY-MM-DDTHH:MM:SS".
+    :return: The converted time string in the format "YYYY-MM-DDTHH:MM:SS+0000".
+    """
+    if "+0000" not in original_time:
+        return original_time + "+0000"
+    return original_time
+
+
+# for testsuite in data_dict["testsuites"]["testsuite"]
+def create_result_dictionary(test_suites: dict) -> dict:
+    """
+    Processes test suite data and generates a dictionary containing information
+    about the test execution and individual test cases for Xray integration.
+    :param test_suites: A dictionary containing test suite data. Each test suite
+            should include details such as errors, failures, time, timestamp, and
+            test cases.
+    :return: A dictionary with two keys:
+            - "info": Contains metadata about the test execution, including summary,
+              description, start date, finish date, and project key.
+            - "tests": A list of dictionaries, each representing an individual test
+              case with its test key, status, and comments.
+    Notes:
+        - The function assumes that the `testcase` field in the input can either be
+          a single dictionary or a list of dictionaries. If it's a single dictionary,
+          it is converted into a list for uniform processing.
+        - The `properties` field of each test case is used to extract the test key.
+        - The test execution status is determined based on the presence of failure
+          or error logs.
+        - The `convert_time_to_xray_format` and `compute_end_time` helper functions
+          are used to calculate and format timestamps.
+    """
+    # filter xml file to keep only the info with properties
+    xray_test_ticket = {}
+    test_execution_ticket = {}
+    xray_test_ticket_list = []
+
+    for testsuite in test_suites:
+        # all the testsuite -> test execution
+        has_errors = True if int(testsuite["errors"]) > 0 else False
+        has_failures = True if int(testsuite["failures"]) > 0 else False
+        duration = float(testsuite["time"])  # sec
+        start_time = convert_time_to_xray_format(testsuite["timestamp"])  # str
+        end_time = compute_end_time(start_time=start_time, duration=duration)  # str
+        summary = "Xray test execution summary"
+        description = "Xray test execution description"
+
+        test_execution_ticket = {
+            "summary": summary,
+            "description": description,
+            "startDate": start_time,
+            "finishDate": end_time,
+        }
+
+        # for each testcase (test function) -> xray ticket
+        if not isinstance(testsuite["testcase"], list):
+            # if there is only one test case, it is not a list
+            testcase = testsuite["testcase"]
+            testsuite["testcase"] = [testcase]
+
+        for testcase in testsuite["testcase"]:
+            name = testcase.get("name")
+            if name == "test_run":
+                continue
+            # from properties get the test_key and the project_key
+            properties = testcase.get("properties")
+            if properties is None:
+                continue
+
+            test_key = get_test_key_from_property(properties["property"])
+            duration = float(testcase["time"])  # sec
+            start_time = convert_time_to_xray_format(testcase["timestamp"])  # str
+            end_time = compute_end_time(start_time=start_time, duration=duration)  # str
+            # get failure or error logs
+            failure_logs = testcase.get("failure")
+            error_logs = testcase.get("error")
+            # get the test status
+            is_failed = True if failure_logs and has_failures else False
+            is_error = True if error_logs and has_errors else False
+            if is_failed:
+                comment = failure_logs["#text"]
+            elif is_error:
+                comment = error_logs["#text"]
+            elif failure_logs == error_logs:
+                comment = "Successful execution"
+            else:
+                raise ValueError("Test should has failed or passed. Not both.")
+
+            status = "PASSED" if not is_failed and not is_error else "FAILED"
+
+            xray_test_ticket = {
+                "testKey": test_key,
+                "comment": name + ": " + comment,
+                "status": status,
+            }
+            xray_test_ticket_list.append(xray_test_ticket)
+
+    # update project key
+    project_key = xray_test_ticket["testKey"].split("-")[0]
+    test_execution_ticket["project"] = project_key
+    return {"info": test_execution_ticket, "tests": xray_test_ticket_list}
