@@ -23,6 +23,7 @@ Create a Step report
 .. currentmodule:: assert_step_report
 
 """
+import copy
 import functools
 import inspect
 import linecache
@@ -60,6 +61,11 @@ REPORT_KEYS = [
     "expected_result",
     "actual_result",
     "succeed",
+    "test_name_function",
+    "failure_log",
+    "description",
+    "properties",
+    "is_parameterized",
 ]
 DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
@@ -237,10 +243,13 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         ALL_STEP_REPORT[test_class_name]["test_list"][test_name]: Dict[
             str,
             Union[str, List[List[Dict[str, Union[str, bool]]]], List[List[str]]],
+            Dict[str, str],
         ] = {
             "description": test_description,
             "steps": [[]],
             "unexpected_errors": [[]],
+            "properties": {},
+            "is_parameterized": False,
         }
 
 
@@ -251,11 +260,31 @@ def _add_step(
     var_name: str,
     expected: typing.Any,
     received: typing.Any,
+    test_name_function: str,
+    failure_log: str,
+    description: str,
+    properties: dict,
+    is_parameterized: bool,
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
-
     ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1].append(
-        dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
+        dict(
+            zip(
+                REPORT_KEYS,
+                [
+                    message,
+                    var_name,
+                    expected,
+                    received,
+                    True,
+                    test_name_function,
+                    failure_log,
+                    description,
+                    properties,
+                    is_parameterized,
+                ],
+            )
+        )
     )
 
 
@@ -348,7 +377,7 @@ def assert_decorator(assert_method: types.MethodType):
             signature = inspect.signature(assert_method)
             arguments = signature.bind(*args, **kwargs).arguments
             test_name = test_case_inst.step_report.current_table or test_name
-            # 1. Gather message, var_name, expected, received
+            # 1. Gather message, var_name, expected, received, test_name_function, test_description, failure_log, ...
             # 1.1 Get message. default value: ""
             if test_case_inst.step_report.message:
                 message = test_case_inst.step_report.message
@@ -388,6 +417,30 @@ def assert_decorator(assert_method: types.MethodType):
             # 1.4. Get Expected value
             expected = _get_expected(assert_name, arguments)
 
+            # 1.5. Get Test name function which could be parameterized
+            test_name_function = (
+                f_back.f_locals.get("self", None)._testMethodName if f_back.f_locals.get("self", None) else ""
+            )
+
+            # 1.6. Get the current test description
+            description = f_back.f_locals.get("self", None)._testMethodDoc if f_back.f_locals.get("self", None) else ""
+
+            # 1.7. Get the failure logs
+            failure_log = traceback.format_exc() if test_case_inst.failureException else "None"
+            if failure_log == "NoneType: None\n":
+                failure_log = "None"
+
+            # 1.8. Get the test properties of the current test function
+            self_obj = f_back.f_locals.get("self", {})
+            properties = (
+                self_obj.properties
+                if hasattr(self_obj, "_testMethodName") and test_name in self_obj._testMethodName
+                else {}
+            )
+
+            # 1.9. is the test parameterized
+            is_parameterized = test_name in test_name_function and len(test_name) < len(test_name_function)
+
             # 2. Update report data
             # 2.1 Ensure report ready for update
             _prepare_report(test_case_inst, test_name)
@@ -400,6 +453,11 @@ def assert_decorator(assert_method: types.MethodType):
                 var_name,
                 expected,
                 received,
+                test_name_function,
+                failure_log,
+                description,
+                properties,
+                is_parameterized,
             )
 
         except Exception as e:
@@ -416,7 +474,9 @@ def assert_decorator(assert_method: types.MethodType):
             if parent_method:
                 ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][-1]["succeed"] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
-
+                ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][-1][
+                    "failure_log"
+                ] = traceback.format_exc()
             test_case_inst.step_report.success = False
 
             # repeat the assertion failure as first element in the traceback
@@ -456,11 +516,13 @@ jinja_template_functions = {
 def generate_step_report(
     test_result: Union[BannerTestResult, XmlTestResult],
     output_file: str,
-) -> None:
+) -> OrderedDict:
     """Generate the HTML step report based on Jinja2 template
 
     :param test_result: Result of tests to generate the report from
     :param output_file: Report output file path
+
+    :return: The ALL_STEP_REPORT dictionary
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
     test_result.stream.writeln("Generating HTML reports...")
@@ -501,9 +563,22 @@ def generate_step_report(
             ALL_STEP_REPORT[class_name]["time_result"]["End Time"] = stop_time
             ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(elapsed_time, 2)
             if test_case in test_result.errors:
-                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(test_case[1])
-                ALL_STEP_REPORT[class_name]["succeed"] = False
-
+                test_names = [
+                    key
+                    for key in ALL_STEP_REPORT[class_name]["test_list"].keys()
+                    if (key.startswith("test_") and key != "test_run")
+                ]
+                for test_name in test_names:
+                    if test_name != test_method_name:
+                        ALL_STEP_REPORT[class_name]["test_list"][test_name]["unexpected_errors"][-1].append(
+                            test_case[1]
+                        )
+                    else:
+                        ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(
+                            test_case[1]
+                        )
+                    ALL_STEP_REPORT[class_name]["succeed"] = False
+    all_step_report = copy.deepcopy(ALL_STEP_REPORT)
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True)
     template = render_environment.get_template(REPORT_TEMPLATE)
@@ -515,6 +590,7 @@ def generate_step_report(
     # Write the output into the output file
     with output_file.open("w") as report_file:
         report_file.write(output_text)
+    return all_step_report
 
 
 def add_retry_information(

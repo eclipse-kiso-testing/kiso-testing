@@ -56,6 +56,7 @@ import pykiso
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
 from ..test_result.assert_step_report import StepReportData, assert_decorator, generate_step_report
+from ..test_result.serialize_step_report import serialize_step_report
 from ..test_result.text_result import BannerTestResult, ResultStream
 from ..test_result.xml_result import XmlTestResult
 from . import test_suite
@@ -352,7 +353,7 @@ def filter_test_modules_by_suite(
 
 def collect_test_suites(
     config_test_suite_list: List[SuiteConfig],
-    test_filter_pattern: Optional[str] = None,
+    test_filter_pattern: str | None = None,
 ) -> List[test_suite.BasicTestSuite]:
     """Collect and load all test suites defined in the test configuration.
 
@@ -410,9 +411,10 @@ def execute(
     config: ConfigDict,
     report_type: str = "text",
     report_name: str = "",
-    user_tags: Optional[Dict[str, List[str]]] = None,
-    step_report: Optional[Path] = None,
-    pattern_inject: Optional[str] = None,
+    user_tags: Dict[str, List[str]] | None = None,
+    step_report: Path | None = None,
+    save_step_report: bool = False,
+    pattern_inject: str | None = None,
     failfast: bool = False,
     junit_path: str = "reports",
 ) -> int:
@@ -424,6 +426,7 @@ def execute(
     :param report_name: name of the junit report
     :param user_tags: test case tags to execute
     :param step_report: file path for the step report or None
+    :param save_step_report: serialize the step report with pickle
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
@@ -487,7 +490,13 @@ def execute(
 
         # Generate the html step report
         if step_report is not None:
-            generate_step_report(result, step_report)
+            step_report_data = generate_step_report(result, step_report)
+
+            # Save the step report with pickle if requested
+            if save_step_report:
+                output_file = Path(step_report).resolve().with_suffix(".pkl")
+                output_file.parent.mkdir(parents=True, exist_ok=True)
+                serialize_step_report(step_report_data, output_file)
 
         exit_code = failure_and_error_handling(result)
     except NameError:
@@ -552,7 +561,9 @@ def handle_can_trace_strategy(
     return test_suites
 
 
-def _get_connector_instance_with_trace_file_strategy(config: dict[str, Any]) -> Optional[Union[CCPCanCan, CCSocketCan]]:
+def _get_connector_instance_with_trace_file_strategy(
+    config: dict[str, Any],
+) -> Optional[Union[CCPCanCan, CCSocketCan]]:
     """Get pcan and socket can channels from auxiliaries created from the Yaml
 
     :param config: dict from converted YAML config file
