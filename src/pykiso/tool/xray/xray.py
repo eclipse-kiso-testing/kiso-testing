@@ -4,10 +4,12 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import requests
+import xmltodict
 from junitparser.cli import merge as merge_junit_xml
 from requests.auth import AuthBase
 
 from ...test_result.serialize_step_report import deserialize_step_report
+from ...tool.xray.from_xml_report import create_result_dictionary
 
 API_VERSION = "api/v2/"
 AUTHENTICATE_ENDPOINT = "/api/v2/authenticate"
@@ -214,41 +216,14 @@ def extract_test_results_from_junit(path_results: Path, merge_xml_files: bool, u
             xml_path = xml_dir / "xml_merged.xml"
             merge_junit_xml(file_to_parse, xml_path, None)
             file_to_parse = [xml_path]
-        # from the JUnit xml files, create a temporary file
+
+        # use xml to json
         for file in file_to_parse:
-            tree = ET.ElementTree()
-            tree.parse(file)
-            root = tree.getroot()
-            # scan all the xml to keep the testsuite with the property "test_key"
-            for testsuite in root.findall("testsuite"):
-                testcase = testsuite.find("testcase")
-                properties = testcase.find("properties")
-                if properties is None:
-                    # remove the testsuite not marked by the xray decorator
-                    tree.getroot().remove(testsuite)
-                    continue
-                is_xray = False
-                for property in properties.findall("property"):
-                    if property.attrib.get("name") == "test_key":
-                        is_xray = True
-                        break
-                if not is_xray:
-                    # remove the testsuite not marked by the xray decorator
-                    tree.getroot().remove(testsuite)
+            with open(path_results) as xml_file:
+                data_dict = xmltodict.parse(xml_file.read(), attr_prefix="")
 
-            if update_description:
-                # update the test_description property element: name and value attributes become name with the description as property text
-                for property in root.iter("property"):
-                    if property.attrib.get("name") == "test_description":
-                        test_description = property.attrib["value"]
-                        del property.attrib["value"]
-                        property.text = test_description
-
-            with tempfile.TemporaryFile() as fp:
-                tree.write(fp)
-                fp.seek(0)
-                xml_results.append(fp.read().decode())
-
+            xray_dict = create_result_dictionary(data_dict["testsuites"]["testsuite"])
+            xml_results.append(xray_dict)
         return xml_results
 
 
