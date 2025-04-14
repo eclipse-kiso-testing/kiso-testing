@@ -1,9 +1,9 @@
 [![License](https://img.shields.io/badge/Licence-Eclipse%20Public%20License%202.0-lightgrey)](https://opensource.org/licenses/EPL-2.0)
 [![Platforms](https://img.shields.io/badge/Platforms-win64%20linux64%20osx64-lightgrey)]()
 [![Supported python version](https://img.shields.io/pypi/pyversions/pykiso)]()
-[![Build status](https://img.shields.io/github/actions/workflow/status/eclipse-kiso-testing/kiso-testing/verification_validation.yml)]
+![Build status](https://img.shields.io/github/actions/workflow/status/eclipse-kiso-testing/kiso-testing/verification_validation.yml)
 [![Documentation Status](https://readthedocs.org/projects/kiso-testing/badge/?version=latest)](https://kiso-testing.readthedocs.io/en/latest/?badge=latest)
-[![codecov](https://codecov.io/gh/eclipse/kiso-testing/branch/master/graph/badge.svg?token=IBKQ700ABS)](https://codecov.io/gh/eclipse-kiso-testing/kiso-testing)
+[![codecov](https://codecov.io/gh/eclipse-kiso-testing/kiso-testing/graph/badge.svg?token=IBKQ700ABS)](https://codecov.io/gh/eclipse-kiso-testing/kiso-testing)
 [![CodeFactor](https://www.codefactor.io/repository/github/eclipse/kiso-testing/badge)](https://www.codefactor.io/repository/github/eclipse/kiso-testing)
 [![Last commit](https://img.shields.io/github/last-commit/eclipse/kiso-testing)]()
 [![Commits since latest version](https://img.shields.io/github/commits-since/eclipse/kiso-testing/latest/master)]()
