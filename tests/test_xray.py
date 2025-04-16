@@ -1,16 +1,10 @@
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pykiso.tool.xray.xray import (
-    ClientSecretAuth,
-    XrayException,
-    XrayPublisher,
-    extract_test_results_from_junit,
-    extract_test_results_from_pickle,
-    upload_test_results,
-)
+from pykiso.tool.xray.xray import ClientSecretAuth, XrayPublisher, extract_test_results, upload_test_results
 
 
 def test_client_secret_auth_endpoint_url():
@@ -82,36 +76,43 @@ def test_upload_test_results(mock_post):
         base_url="https://example.com", client_id="user", client_secret="password", verify=True
     )
     mock_publisher.publish_xml_result.assert_called_once_with(
-        data={"key": "value"}, project_key=None, test_execution_id=None, test_execution_name=None
+        data={"key": "value"}, project_key=None, test_execution_name=None
     )
     assert result == {"id": "123", "key": "TEST-1", "issue": "Issue"}
 
 
-def test_extract_test_results_from_junit(tmp_path):
+def test_extract_test_results_with_valid_file(mocker):
+    mocker.patch("pykiso.tool.xray.xray.create_result_dictionary", return_value={"key": "value"})
+    mocker.patch("pykiso.tool.xray.xray.reformat_xml_results", return_value=["formatted_result"])
+
     xml_content = """<testsuites>
         <testsuite>
-            <testcase>
-                <properties>
-                    <property name="test_key" value="TEST-1"/>
-                </properties>
-            </testcase>
+            <testcase classname="test_class" name="test_name" />
         </testsuite>
     </testsuites>"""
-    xml_file = tmp_path / "test.xml"
-    xml_file.write_text(xml_content)
 
-    results = extract_test_results_from_junit(path_results=xml_file, merge_xml_files=False, update_description=False)
-    assert len(results) == 1
-    assert "TEST-1" in results[0]
+    with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as temp_file:
+        temp_file.write(xml_content.encode())
+        temp_file_path = Path(temp_file.name)
+
+    results = extract_test_results(
+        path_results=temp_file_path,
+        merge_xml_files=False,
+        update_description=False,
+        test_execution_id=None,
+    )
+
+    assert results == ["formatted_result"]
 
 
-def test_extract_test_results_from_pickle(tmp_path):
-    mock_deserialize = MagicMock(return_value={"key": "value"})
-    with patch("pykiso.tool.xray.xray.deserialize_step_report", mock_deserialize):
-        pkl_file = tmp_path / "test.pkl"
-        pkl_file.write_bytes(b"mock content")
+def test_extract_test_results_with_invalid_file_extension():
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
+        temp_file_path = Path(temp_file.name)
 
-        results = extract_test_results_from_pickle(path_results=pkl_file)
-        assert len(results) == 1
-        assert results[0] == {"key": "value"}
-        mock_deserialize.assert_called_once_with(pkl_file)
+    with pytest.raises(RuntimeError, match="Expected xml file but found a .txt file instead"):
+        extract_test_results(
+            path_results=temp_file_path,
+            merge_xml_files=False,
+            update_description=False,
+            test_execution_id=None,
+        )

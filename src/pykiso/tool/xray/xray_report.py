@@ -55,7 +55,7 @@ def get_test_key_from_property(property: list) -> None | str:
     Extracts the value of the "test_key" property from a list of property dictionaries.
 
     :param property: A list of dictionaries, where each dictionary represents a property
-                         with "name" and "value" keys.
+        with "name" and "value" keys.
 
     :return: None | str: The value of the "test_key" property if found, otherwise None.
     """
@@ -72,7 +72,7 @@ def compute_end_time(start_time: str, duration: float) -> str:
     Computes the end time by adding a duration to a given start time.
 
     :param start_time: The start time in ISO 8601 format (e.g., "YYYY-MM-DDTHH:MM:SS").
-                       If the timezone offset is not provided, "+0000" (UTC) is assumed.
+        If the timezone offset is not provided, "+0000" (UTC) is assumed.
     :param duration: The duration in seconds to add to the start time.
     :return: The computed end time in ISO 8601 format with a "+0000" timezone offset.
     """
@@ -96,7 +96,6 @@ def convert_time_to_xray_format(original_time: str) -> str:
     return original_time
 
 
-# for testsuite in data_dict["testsuites"]["testsuite"]
 def create_result_dictionary(test_suites: dict) -> dict:
     """
     Processes test suite data and generates a dictionary containing information
@@ -125,7 +124,7 @@ def create_result_dictionary(test_suites: dict) -> dict:
     xray_test_ticket_list = []
 
     for testsuite in test_suites:
-        # all the testsuite -> test execution
+        # all the testsuite -> build the test execution info
         has_errors = True if int(testsuite["errors"]) > 0 else False
         has_failures = True if int(testsuite["failures"]) > 0 else False
         duration = float(testsuite["time"])  # sec
@@ -141,25 +140,26 @@ def create_result_dictionary(test_suites: dict) -> dict:
             "finishDate": end_time,
         }
 
-        # for each testcase (test function) -> xray ticket
         if not isinstance(testsuite["testcase"], list):
             # if there is only one test case, it is not a list
             testcase = testsuite["testcase"]
             testsuite["testcase"] = [testcase]
 
         for testcase in testsuite["testcase"]:
+            # for each test case -> build the xray test info
             name = testcase.get("name")
             if name == "test_run":
                 continue
-            # from properties get the test_key and the project_key
+
+            # keep only test cases with a test_key in the decorator
             properties = testcase.get("properties")
             if properties is None:
                 continue
 
             test_key = get_test_key_from_property(properties["property"])
             duration = float(testcase["time"])  # sec
-            start_time = convert_time_to_xray_format(testcase["timestamp"])  # str
-            end_time = compute_end_time(start_time=start_time, duration=duration)  # str
+            start_time = convert_time_to_xray_format(testcase["timestamp"])
+            end_time = compute_end_time(start_time=start_time, duration=duration)
             # get failure or error logs
             failure_logs = testcase.get("failure")
             error_logs = testcase.get("error")
@@ -174,7 +174,6 @@ def create_result_dictionary(test_suites: dict) -> dict:
                 comment = "Successful execution"
             else:
                 raise ValueError("Test should has failed or passed. Not both.")
-
             status = "PASSED" if not is_failed and not is_error else "FAILED"
 
             xray_test_ticket = {
@@ -188,3 +187,49 @@ def create_result_dictionary(test_suites: dict) -> dict:
     project_key = xray_test_ticket["testKey"].split("-")[0]
     test_execution_ticket["project"] = project_key
     return {"info": test_execution_ticket, "tests": xray_test_ticket_list}
+
+
+def is_parameterized_test(test_results: dict) -> bool:
+    """
+    Check if the test is parameterized. The test is parametrized if several times there are the same test_key.
+    :param test_results: The test results to check.
+
+    :return: True if the test is parameterized, False otherwise.
+    """
+    test_keys_list = [test["testKey"] for test in test_results["tests"]]  # Extract all test keys
+    test_keys_set = {test["testKey"] for test in test_results["tests"]}  # Extract unique test keys
+    return len(test_keys_list) != len(test_keys_set)
+
+
+def reformat_xml_results(test_results: dict, test_execution_id: str | None = None) -> list[dict]:
+    """
+    Reformats a list of XML results dictionaries by merging them based on their 'testKey' key.
+
+    :param test_results: A list of dictionaries where each dictionary contains 'info' (a dictionary of test metadata)
+        and 'tests' (a list of test cases).
+    :param test_execution_id: the xray's test execution ticket id where to import the test results,
+        if none is specified a new test execution ticket will be created
+
+    :return: A list of merged test result dictionaries. Each dictionary contains 'info' (a dictionary of test metadata)
+        and 'tests' (a combined list of test cases from all input dictionaries with the same 'info').
+    """
+
+    if is_parameterized_test(test_results=test_results):
+        if test_execution_id is not None:
+            raise ValueError("Test execution ID should not be specified for parameterized tests.")
+        # create one test execution per test cases
+        parameterized_test_results = []
+        original_summary = test_results["info"]["summary"]
+        test_execution_ticket = test_results["info"]
+        for xray_test_ticket in test_results["tests"]:
+            test_case_name = xray_test_ticket["comment"].split(": ")[0]  # remove the comment
+            test_case_summary = original_summary + ": " + test_case_name
+            test_execution_ticket["summary"] = test_case_summary
+            parameterized_test_results.append({"info": test_execution_ticket, "tests": [xray_test_ticket]})
+        return parameterized_test_results
+    else:
+        # create one test execution per all the test cases
+        if test_execution_id is not None:
+            # to re-write on existing test execution ticket
+            test_results["testExecutionKey"] = test_execution_id
+        return [test_results]

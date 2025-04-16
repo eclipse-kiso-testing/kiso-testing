@@ -208,12 +208,6 @@ class CommandWithOptionalFlagValues(click.Command):
     help="generate the HTML step report at the specified path",
 )
 @click.option(
-    "--save-step-report",
-    is_flag=True,
-    required=False,
-    help="save a pickled step report at the same path specified for the HTML step report",
-)
-@click.option(
     "--failfast",
     is_flag=True,
     help="stop the test run on the first error or failure",
@@ -271,7 +265,6 @@ def main(
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param step_report: file path for the step report or None
-    :param save_step_report: allow the user to save the step report in a pickle file
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
