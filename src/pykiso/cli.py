@@ -205,7 +205,7 @@ class CommandWithOptionalFlagValues(click.Command):
     required=False,
     default=None,
     type=click.Path(writable=True),
-    help="generate the HTML step report at the specified path",
+    help="generate the step report at the specified path",
 )
 @click.option(
     "--failfast",
@@ -242,7 +242,6 @@ def main(
     log_level: str = "INFO",
     report_type: str = "text",
     step_report: PathType | None = None,
-    save_step_report: bool = False,
     pattern: str | None = None,
     failfast: bool = False,
     verbose: bool = False,
@@ -310,7 +309,6 @@ def main(
                 yaml_name,
                 user_tags,
                 step_report,
-                save_step_report,
                 pattern,
                 failfast,
                 junit,
