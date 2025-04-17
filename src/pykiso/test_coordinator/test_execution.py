@@ -352,7 +352,7 @@ def filter_test_modules_by_suite(
 
 def collect_test_suites(
     config_test_suite_list: List[SuiteConfig],
-    test_filter_pattern: str | None = None,
+    test_filter_pattern: Optional[str] = None,
 ) -> List[test_suite.BasicTestSuite]:
     """Collect and load all test suites defined in the test configuration.
 
@@ -410,9 +410,9 @@ def execute(
     config: ConfigDict,
     report_type: str = "text",
     report_name: str = "",
-    user_tags: Dict[str, List[str]] | None = None,
-    step_report: Path | None = None,
-    pattern_inject: str | None = None,
+    user_tags: Optional[Dict[str, List[str]]] = None,
+    step_report: Optional[Path] = None,
+    pattern_inject: Optional[str] = None,
     failfast: bool = False,
     junit_path: str = "reports",
 ) -> int:
@@ -552,9 +552,7 @@ def handle_can_trace_strategy(
     return test_suites
 
 
-def _get_connector_instance_with_trace_file_strategy(
-    config: dict[str, Any],
-) -> Optional[Union[CCPCanCan, CCSocketCan]]:
+def _get_connector_instance_with_trace_file_strategy(config: dict[str, Any]) -> Optional[Union[CCPCanCan, CCSocketCan]]:
     """Get pcan and socket can channels from auxiliaries created from the Yaml
 
     :param config: dict from converted YAML config file

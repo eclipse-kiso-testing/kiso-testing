@@ -18,7 +18,6 @@ Integration Test Framework
 .. currentmodule:: cli
 
 """
-import getpass
 import logging
 import os
 import pprint
@@ -26,7 +25,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import click
 
@@ -241,12 +240,12 @@ def main(
     log_path: Tuple[PathType] = None,
     log_level: str = "INFO",
     report_type: str = "text",
-    step_report: PathType | None = None,
-    pattern: str | None = None,
+    step_report: Optional[PathType] = None,
+    pattern: Optional[str] = None,
     failfast: bool = False,
     verbose: bool = False,
-    logger: str | None = None,
-    junit: str | None = None,
+    logger: Optional[str] = None,
+    junit: Optional[str] = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -268,7 +267,6 @@ def main(
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
     :param logger: class of the logger that will be used in the tests
-    :param junit: name or directory where to save test results in a junit xml report
     """
     # we are expecting one log file path or as many as the provided configuration files
     if log_path and len(log_path) not in (1, len(test_configuration_file)):
