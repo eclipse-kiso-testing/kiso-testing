@@ -548,3 +548,97 @@ def test_add_step_success():
     assert step["description"] == description
     assert step["properties"] == properties
     assert step["is_parameterized"] == is_parameterized
+
+
+@pytest.fixture
+def mock_test_result(mocker):
+    """Fixture to create a mock test result."""
+    mock_result = mocker.MagicMock()
+    mock_result.successes = []
+    mock_result.expectedFailures = []
+    mock_result.failures = []
+    mock_result.errors = []
+    mock_result.unexpectedSuccesses = []
+    mock_result.stream.writeln = mocker.MagicMock()
+    return mock_result
+
+
+def test_generate_step_report_successful_tests(mocker, mock_test_result):
+    """Test generate_step_report with successful tests."""
+    mock_test_case = mocker.MagicMock(spec=TestCase)
+    mock_test_case.start_time = 1638316800
+    mock_test_case.stop_time = 1638316860
+    mock_test_case.elapsed_time = 60
+    mock_test_case._testMethodName = "test_success"
+    mock_test_result.successes = [mock_test_case]
+
+    mock_template = mocker.MagicMock()
+    mock_template.render.return_value = "Rendered HTML"
+    mock_environment = mocker.MagicMock()
+    mock_environment.get_template.return_value = mock_template
+    mocker.patch("jinja2.Environment", return_value=mock_environment)
+
+    mock_output_file = mocker.MagicMock()
+    mock_output_file.open = mocker.mock_open()
+    mocker.patch("pathlib.Path.resolve", return_value=mock_output_file)
+
+    assert_step_report.generate_step_report(mock_test_result, "output.html")
+
+    mock_test_result.stream.writeln.assert_called_once_with("Generating HTML reports...")
+    mock_environment.get_template.assert_called_once_with("templates/report_template.html.j2")
+    mock_template.render.assert_called_once_with({"ALL_STEP_REPORT": assert_step_report.ALL_STEP_REPORT})
+    mock_output_file.open.assert_called_once_with("w")
+
+
+def test_generate_step_report_failed_tests(mocker, mock_test_result):
+    """Test generate_step_report with failed tests."""
+    mock_test_case = mocker.MagicMock(spec=TestCase)
+    mock_test_case.start_time = 1638316800
+    mock_test_case.stop_time = 1638316860
+    mock_test_case.elapsed_time = 60
+    mock_test_case._testMethodName = "test_failure"
+    mock_test_result.failures = [(mock_test_case, "Failure message")]
+
+    mock_template = mocker.MagicMock()
+    mock_template.render.return_value = "Rendered HTML"
+    mock_environment = mocker.MagicMock()
+    mock_environment.get_template.return_value = mock_template
+    mocker.patch("jinja2.Environment", return_value=mock_environment)
+
+    mock_output_file = mocker.MagicMock()
+    mock_output_file.open = mocker.mock_open()
+    mocker.patch("pathlib.Path.resolve", return_value=mock_output_file)
+
+    assert_step_report.generate_step_report(mock_test_result, "output.html")
+
+    mock_test_result.stream.writeln.assert_called_once_with("Generating HTML reports...")
+    mock_environment.get_template.assert_called_once_with("templates/report_template.html.j2")
+    mock_template.render.assert_called_once_with({"ALL_STEP_REPORT": assert_step_report.ALL_STEP_REPORT})
+    mock_output_file.open.assert_called_once_with("w")
+
+
+def test_generate_step_report_with_errors(mocker, mock_test_result):
+    """Test generate_step_report with errors."""
+    mock_test_case = mocker.MagicMock(spec=TestCase)
+    mock_test_case.start_time = 1638316800
+    mock_test_case.stop_time = 1638316860
+    mock_test_case.elapsed_time = 60
+    mock_test_case._testMethodName = "test_error"
+    mock_test_result.errors = [(mock_test_case, "Error message")]
+
+    mock_template = mocker.MagicMock()
+    mock_template.render.return_value = "Rendered HTML"
+    mock_environment = mocker.MagicMock()
+    mock_environment.get_template.return_value = mock_template
+    mocker.patch("jinja2.Environment", return_value=mock_environment)
+
+    mock_output_file = mocker.MagicMock()
+    mock_output_file.open = mocker.mock_open()
+    mocker.patch("pathlib.Path.resolve", return_value=mock_output_file)
+
+    assert_step_report.generate_step_report(mock_test_result, "output.html")
+
+    mock_test_result.stream.writeln.assert_called_once_with("Generating HTML reports...")
+    mock_environment.get_template.assert_called_once_with("templates/report_template.html.j2")
+    mock_template.render.assert_called_once_with({"ALL_STEP_REPORT": assert_step_report.ALL_STEP_REPORT})
+    mock_output_file.open.assert_called_once_with("w")
