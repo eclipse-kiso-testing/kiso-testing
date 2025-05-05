@@ -103,11 +103,7 @@ def test_assert_decorator_no_message(mocker, test_case):
         "data_to_test",
         "True",
         True,
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -126,11 +122,7 @@ def test_assert_decorator_step_report_message(mocker, test_case):
         "data_to_test",
         "True",
         True,
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -158,11 +150,7 @@ def test_assert_decorator_reraise(mocker, test_case):
         "data_to_test",
         "True",
         False,
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -178,11 +166,7 @@ def test_assert_decorator_remote_test(mocker, remote_test_case):
         "report",
         "Equal to MessageReportType.TEST_PASS",
         message.MessageReportType.TEST_PASS,
-        "runTest",
         "None",
-        "No test",
-        {},
-        False,
     )
 
 
@@ -198,11 +182,7 @@ def test_assert_decorator_no_var_name(mocker, test_case):
         "True",
         "True",
         True,
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -231,11 +211,7 @@ def test_assert_decorator_multi_input(mocker, test_case):
         "data_to_test",
         "Almost Equal to 4.5; with delta=1",
         4.5,
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -273,11 +249,7 @@ def test_add_step():
         "data_to_test",
         "Almost Equal to 4.5; with delta=1",
         4.5,
-        "test_assert_step_report_multi_input",
         "None",
-        "test description",
-        {},
-        False,
     )
 
 
@@ -396,11 +368,7 @@ def test_assert_decorator_step_report_message_deprecated(mocker, remote_test_cas
         "var",
         "Equals to Test",
         "Test",
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -422,11 +390,7 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
         "var",
         "Equal to Test",
         "Test",
-        "",
         "None",
-        "",
-        {},
-        False,
     )
 
 
@@ -488,8 +452,6 @@ def test_prepare_report_creates_test_method_entry(test_case):
     assert "description" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
     assert "steps" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
     assert "unexpected_errors" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
-    assert "properties" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
-    assert "is_parameterized" in assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]
 
 
 def test_prepare_report_does_not_override_existing_entries(test_case):
@@ -530,11 +492,7 @@ def test_add_step_success():
         var_name,
         expected,
         received,
-        test_name_function,
         failure_log,
-        description,
-        properties,
-        is_parameterized,
     )
 
     step = assert_step_report.ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][-1]
@@ -543,11 +501,7 @@ def test_add_step_success():
     assert step["expected_result"] == expected
     assert step["actual_result"] == received
     assert step["succeed"] is True
-    assert step["test_name_function"] == test_name_function
     assert step["failure_log"] == failure_log
-    assert step["description"] == description
-    assert step["properties"] == properties
-    assert step["is_parameterized"] == is_parameterized
 
 
 @pytest.fixture

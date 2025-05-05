@@ -60,11 +60,8 @@ REPORT_KEYS = [
     "expected_result",
     "actual_result",
     "succeed",
-    "test_name_function",
     "failure_log",
     "description",
-    "properties",
-    "is_parameterized",
 ]
 DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
@@ -238,17 +235,14 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
     # Create the current test step storage
     if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
         test_method = getattr(test, test_name, None)
-        test_description = test_method.__doc__ or ""
+        test_description = (test_method.__doc__ or test._testMethodDoc or "").split(" [")[0]
         ALL_STEP_REPORT[test_class_name]["test_list"][test_name]: Dict[
             str,
             Union[str, List[List[Dict[str, Union[str, bool]]]], List[List[str]]],
-            Dict[str, str],
         ] = {
             "description": test_description,
             "steps": [[]],
             "unexpected_errors": [[]],
-            "properties": {},
-            "is_parameterized": False,
         }
 
 
@@ -259,11 +253,7 @@ def _add_step(
     var_name: str,
     expected: typing.Any,
     received: typing.Any,
-    test_name_function: str,
     failure_log: str,
-    description: str,
-    properties: dict,
-    is_parameterized: bool,
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
@@ -277,11 +267,7 @@ def _add_step(
                     expected,
                     received,
                     True,
-                    test_name_function,
                     failure_log,
-                    description,
-                    properties,
-                    is_parameterized,
                 ],
             )
         )
@@ -377,7 +363,7 @@ def assert_decorator(assert_method: types.MethodType):
             signature = inspect.signature(assert_method)
             arguments = signature.bind(*args, **kwargs).arguments
             test_name = test_case_inst.step_report.current_table or test_name
-            # 1. Gather message, var_name, expected, received, test_name_function, test_description, failure_log, ...
+            # 1. Gather message, var_name, expected, received, failure_log
             # 1.1 Get message. default value: ""
             if test_case_inst.step_report.message:
                 message = test_case_inst.step_report.message
@@ -417,29 +403,10 @@ def assert_decorator(assert_method: types.MethodType):
             # 1.4. Get Expected value
             expected = _get_expected(assert_name, arguments)
 
-            # 1.5. Get Test name function which could be parameterized
-            test_name_function = (
-                f_back.f_locals.get("self", None)._testMethodName if f_back.f_locals.get("self", None) else ""
-            )
-
-            # 1.6. Get the current test description
-            description = f_back.f_locals.get("self", None)._testMethodDoc if f_back.f_locals.get("self", None) else ""
-
-            # 1.7. Get the failure logs
+            # 1.5. Get the failure logs
             failure_log = traceback.format_exc() if test_case_inst.failureException else "None"
             if failure_log == "NoneType: None\n":
                 failure_log = "None"
-
-            # 1.8. Get the test properties of the current test function
-            self_obj = f_back.f_locals.get("self", {})
-            properties = (
-                self_obj.properties
-                if hasattr(self_obj, "_testMethodName") and test_name in self_obj._testMethodName
-                else {}
-            )
-
-            # 1.9. is the test parameterized
-            is_parameterized = test_name in test_name_function and len(test_name) < len(test_name_function)
 
             # 2. Update report data
             # 2.1 Ensure report ready for update
@@ -453,11 +420,7 @@ def assert_decorator(assert_method: types.MethodType):
                 var_name,
                 expected,
                 received,
-                test_name_function,
                 failure_log,
-                description,
-                properties,
-                is_parameterized,
             )
 
         except Exception as e:
