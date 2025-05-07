@@ -531,14 +531,9 @@ def generate_step_report(
                     if (key.startswith("test_") and key != "test_run")
                 ]
                 for test_name in test_names:
-                    if test_name != test_method_name:
-                        ALL_STEP_REPORT[class_name]["test_list"][test_name]["unexpected_errors"][-1].append(
-                            test_case[1]
-                        )
-                    else:
-                        ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(
-                            test_case[1]
-                        )
+                    name = test_name if test_name != test_method_name else test_method_name
+                    test_list = ALL_STEP_REPORT[class_name]["test_list"][name]
+                    test_list["unexpected_errors"][-1].append(test_case[1])
                     ALL_STEP_REPORT[class_name]["succeed"] = False
 
     # Render the source template
