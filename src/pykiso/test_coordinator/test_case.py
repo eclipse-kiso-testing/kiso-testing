@@ -89,6 +89,9 @@ class BasicTest(unittest.TestCase):
 
         self._properties = None
 
+    def __str__(self):
+        return "%s (%s)" % (self._testMethodName, self.__class__.__name__)
+
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
 

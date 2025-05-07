@@ -105,6 +105,9 @@ class BaseTestSuite(unittest.TestCase):
 
         self.fail(info_to_print)
 
+    def __str__(self):
+        return "%s (%s)" % (self._testMethodName, self.__class__.__name__)
+
 
 class BasicTestSuiteSetup(BaseTestSuite):
     """Inherit from unittest testCase and represent setup fixture."""
