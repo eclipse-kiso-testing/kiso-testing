@@ -393,7 +393,7 @@ def test_properties(value, type, properties):
         pass
 
     test_case_inst = DummyClass(1, 1, None, {"Component1": ["Req1", "Req2"]}, None, None, None, None)
-    assert test_case_inst.properties is None
+    assert test_case_inst.properties == None
 
     # update properties
     test_case_inst.properties = properties
