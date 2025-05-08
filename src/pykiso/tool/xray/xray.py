@@ -214,7 +214,7 @@ def extract_test_results(
 
         # use xml to json
         for file in file_to_parse:
-            with open(path_results) as xml_file:
+            with open(file) as xml_file:
                 data_dict = xmltodict.parse(xml_file.read(), attr_prefix="")
 
             xray_dict = create_result_dictionary(data_dict["testsuites"]["testsuite"])
