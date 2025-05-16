@@ -72,7 +72,7 @@ def test_publish_xml_result_connection_error(mock_request):
     )
 
     with pytest.raises(XrayException, match="Cannot connect to JIRA service at /endpoint"):
-        publisher._publish_xml_result(data={"key": "value"})
+        publisher.publish_xml_result(data={"key": "value"})
 
 
 @patch("pykiso.tool.xray.xray.requests.post")
@@ -97,9 +97,7 @@ def test_upload_test_results(mock_post):
     mock_auth.assert_called_once_with(
         base_url="https://example.com", client_id="user", client_secret="password", verify=True
     )
-    mock_publisher.publish_xml_result.assert_called_once_with(
-        data={"key": "value"}, project_key=None, test_execution_name=None
-    )
+    mock_publisher.publish_xml_result.assert_called_once_with(data={"key": "value"})
     assert result == {"id": "123", "key": "TEST-1", "issue": "Issue"}
 
 
@@ -121,7 +119,7 @@ def test_extract_test_results_with_valid_file(mocker):
         path_results=temp_file_path,
         merge_xml_files=False,
         update_description=False,
-        test_execution_id=None,
+        test_execution_key=None,
     )
 
     assert results == ["formatted_result"]
@@ -136,7 +134,7 @@ def test_extract_test_results_with_invalid_file_extension():
             path_results=temp_file_path,
             merge_xml_files=False,
             update_description=False,
-            test_execution_id=None,
+            test_execution_key=None,
         )
 
 
@@ -180,75 +178,3 @@ def test_xray_publisher_endpoint_url():
         auth=MagicMock(),
     )
     assert publisher.endpoint_url == "https://example.com/endpoint"
-
-
-@patch("pykiso.tool.xray.xray.requests.post")
-def test_publish_xml_result_multipart_success(mock_post):
-    mock_response = MagicMock()
-    mock_response.content = '{"id": "123", "key": "TEST-1", "issue": "Issue"}'
-    mock_post.return_value = mock_response
-
-    publisher = XrayPublisher(
-        base_url="https://example.com",
-        endpoint="/endpoint",
-        auth=MagicMock(),
-    )
-
-    data = {"key": "value"}
-    project_key = "PROJ"
-    test_execution_name = "Test Execution Name"
-
-    result = publisher._publish_xml_result_multipart(
-        data=data,
-        project_key=project_key,
-        test_execution_name=test_execution_name,
-    )
-
-    mock_post.assert_called_once_with(
-        "https://example.com/api/v2/import/execution/junit/multipart",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        files={
-            "info": json.dumps(
-                {
-                    "fields": {
-                        "project": {"key": project_key},
-                        "summary": test_execution_name,
-                        "issuetype": {"name": "Xray Test Execution"},
-                    }
-                }
-            ),
-            "results": data,
-            "testInfo": json.dumps(
-                {
-                    "fields": {
-                        "project": {"key": project_key},
-                        "summary": test_execution_name,
-                        "issuetype": {"id": None},
-                    }
-                }
-            ),
-        },
-    )
-    assert result == {"id": "123", "key": "TEST-1", "issue": "Issue"}
-
-
-@patch("pykiso.tool.xray.xray.requests.post")
-def test_publish_xml_result_multipart_connection_error(mock_post):
-    mock_post.side_effect = requests.exceptions.ConnectionError
-
-    publisher = XrayPublisher(
-        base_url="https://example.com",
-        endpoint="/endpoint",
-        auth=MagicMock(),
-    )
-
-    data = {"key": "value"}
-    project_key = "PROJ"
-    test_execution_name = "Test Execution Name"
-
-    with pytest.raises(XrayException, match="Cannot connect to JIRA service at import/execution/junit/multipart"):
-        publisher._publish_xml_result_multipart(
-            data=data,
-            project_key=project_key,
-            test_execution_name=test_execution_name,
-        )

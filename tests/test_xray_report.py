@@ -293,7 +293,7 @@ def test_reformat_xml_results_with_parameterized_tests():
             {"testKey": "TEST-1", "comment": "test_case_2: Traceback error", "status": "FAILED"},
         ],
     }
-    test_execution_id = None
+    test_execution_key = None
 
     expected_result = [
         {
@@ -314,7 +314,7 @@ def test_reformat_xml_results_with_parameterized_tests():
         },
     ]
 
-    result = reformat_xml_results(test_results, test_execution_id)
+    result = reformat_xml_results(test_results, test_execution_key)
     assert result == expected_result
 
 
@@ -332,7 +332,7 @@ def test_reformat_xml_results_with_non_parameterized_tests():
             {"testKey": "TEST-2", "comment": "test_case_2: Failed execution", "status": "FAILED"},
         ],
     }
-    test_execution_id = "TEST-EXEC-123"
+    test_execution_key = "TEST-EXEC-123"
 
     expected_result = [
         {
@@ -351,5 +351,5 @@ def test_reformat_xml_results_with_non_parameterized_tests():
         }
     ]
 
-    result = reformat_xml_results(test_results, test_execution_id)
+    result = reformat_xml_results(test_results, test_execution_key)
     assert result == expected_result

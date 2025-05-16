@@ -12,7 +12,7 @@ To upload your results to Xray users have to follow the command :
 
 .. code:: bash
 
-    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-id
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key
 
 Options:
   --user TEXT                   Xray user id  [required]
@@ -21,7 +21,7 @@ Options:
   --url TEXT                    URL of Xray server  [required]
   --path-results PATH           Full path to the folder containing the JUNIT reports
                                 [required]
-  --test-execution-id TEXT      Xray test execution ticket id's use to import the
+  --test-execution-key TEXT     Xray test execution ticket key's use to overwrite the
                                 test results [optional][default value: None]
   --test-execution-name TEXT    Xray test execution name that will be created [optional][default value: None]
   --merge-xml-files             Merge all the xml files to be send in one xml file
