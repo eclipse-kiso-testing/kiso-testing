@@ -12,12 +12,6 @@ from pykiso.tool.xray.xray_report import (
 )
 
 
-def test_convert_time_to_xray_format():
-    original_time = "2021-12-25T15:30:45"
-    expected_time = "2021-12-25T15:30:45+0000"
-    assert convert_time_to_xray_format(original_time) == expected_time
-
-
 @pytest.mark.parametrize("status,expected_status", ([True, "PASSED"], [False, "FAILED"]))
 def test_convert_test_status_to_xray_format_passed(status, expected_status):
     assert convert_test_status_to_xray_format(status) == expected_status
@@ -25,6 +19,24 @@ def test_convert_test_status_to_xray_format_passed(status, expected_status):
 
 def test_convert_test_status_to_xray_format_failed():
     assert convert_test_status_to_xray_format(False) == "FAILED"
+
+
+def test_convert_time_to_xray_format_with_missing_timezone():
+    original_time = "2023-01-01T12:00:00"
+    expected_time = "2023-01-01T12:00:00+0000"
+    assert convert_time_to_xray_format(original_time) == expected_time
+
+
+def test_convert_time_to_xray_format_with_existing_timezone():
+    original_time = "2023-01-01T12:00:00+0000"
+    expected_time = "2023-01-01T12:00:00+0000"
+    assert convert_time_to_xray_format(original_time) == expected_time
+
+
+def test_convert_time_to_xray_format_with_invalid_format():
+    original_time = "2023-01-01 12:00:00"  # Missing 'T' separator
+    expected_time = "2023-01-01 12:00:00+0000"
+    assert convert_time_to_xray_format(original_time) == expected_time
 
 
 def test_merge_results():
@@ -139,6 +151,42 @@ def test_create_result_dictionary_with_single_testcase():
     }
 
     assert create_result_dictionary(test_suites) == expected_result
+
+
+def test_create_result_dictionary_with_single_testcase_with_test_execution_name():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        }
+    ]
+
+    expected_result = {
+        "info": {
+            "summary": "Xray test execution summary for this test",
+            "description": "Xray test execution description",
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            }
+        ],
+    }
+
+    assert create_result_dictionary(test_suites, "Xray test execution summary for this test") == expected_result
 
 
 def test_create_result_dictionary_with_multiple_testcases():
