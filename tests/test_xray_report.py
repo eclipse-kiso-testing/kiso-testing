@@ -366,6 +366,46 @@ def test_reformat_xml_results_with_parameterized_tests():
     assert result == expected_result
 
 
+def test_reformat_xml_results_with_parameterized_tests():
+    test_results = {
+        "info": {
+            "summary": "Test Execution Summary",
+            "description": "Test Execution Description",
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:30:00+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {"testKey": "TEST-1", "comment": "test_case_1: Successful execution", "status": "PASSED"},
+            {"testKey": "TEST-1", "comment": "test_case_2: Traceback error", "status": "FAILED"},
+        ],
+    }
+    test_execution_key = "ABC-123"
+
+    expected_result = [
+        {
+            "info": {
+                "summary": "Test Execution Summary",
+                "description": "Test Execution Description",
+                "startDate": "2023-01-01T12:00:00+0000",
+                "finishDate": "2023-01-01T12:30:00+0000",
+                "project": "TEST",
+            },
+            "testExecutionKey": "ABC-123",
+            "tests": [
+                {
+                    "testKey": "TEST-1",
+                    "comment": "test_case_1: Successful execution\ntest_case_2: Traceback error",
+                    "status": "FAILED",
+                },
+            ],
+        },
+    ]
+
+    result = reformat_xml_results(test_results, test_execution_key)
+    assert result == expected_result
+
+
 def test_reformat_xml_results_with_non_parameterized_tests():
     test_results = {
         "info": {
