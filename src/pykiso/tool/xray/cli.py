@@ -40,8 +40,8 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
 
 @cli_xray.command("upload")
 @click.option(
-    "--test-execution-id",
-    help="Import the JUnit xml test results into an existing Test Execution ticket by overwriting",
+    "--test-execution-key",
+    help="Key of the test execution ticket where to overwrite the test results from a JUnit xml",
     required=False,
     default=None,
     type=click.STRING,
@@ -55,8 +55,8 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
 )
 @click.option(
     "-n",
-    "--test-execution-name",
-    help="Name of the test execution ticket created",
+    "--test-execution-summary",
+    help="Summary of the test execution ticket created",
     type=click.STRING,
     required=False,
 )
@@ -79,8 +79,8 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
 def cli_upload(
     ctx,
     path_results: str,
-    test_execution_id: str,
-    test_execution_name: str,
+    test_execution_key: str,
+    test_execution_summary: str,
     merge_xml_files: bool,
     import_description: bool,
 ) -> None:
@@ -88,8 +88,8 @@ def cli_upload(
 
     :param ctx: click context
     :param path_results: path to the junit xml files containing the test result reports
-    :param test_execution_id: test execution ID where to upload the test results
-    :param test_execution_name: name of the test execution ticket
+    :param test_execution_key: test execution key where to upload the test results
+    :param test_execution_summary: summary of the test execution ticket
     :param merge_xml_files: if True, merge the xml files, else do nothing
     :param import_description: if True, change the ticket description with the test function description
     """
@@ -99,7 +99,8 @@ def cli_upload(
         path_results=path_results,
         merge_xml_files=merge_xml_files,
         update_description=import_description,
-        test_execution_id=test_execution_id,
+        test_execution_key=test_execution_key,
+        test_execution_summary=test_execution_summary,
     )
 
     responses = []
@@ -111,7 +112,6 @@ def cli_upload(
                 user=ctx.obj["USER"],
                 password=ctx.obj["PASSWORD"],
                 results=result,
-                test_execution_name=test_execution_name,
             )
         )
     responses_result_str = json.dumps(responses, indent=2)

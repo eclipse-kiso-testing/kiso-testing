@@ -96,13 +96,16 @@ def convert_time_to_xray_format(original_time: str) -> str:
     return original_time
 
 
-def create_result_dictionary(test_suites: dict) -> dict:
+def create_result_dictionary(test_suites: dict, test_execution_summary: str | None = None) -> dict:
     """
     Processes test suite data and generates a dictionary containing information
     about the test execution and individual test cases for Xray integration.
     :param test_suites: A dictionary containing test suite data. Each test suite
             should include details such as errors, failures, time, timestamp, and
             test cases.
+    :param test_execution_summary: the summary of the test execution ticket where to import the test results,
+        if none is specified by default the test execution summary is "Xray test execution summary"
+
     :return: A dictionary with two keys:
             - "info": Contains metadata about the test execution, including summary,
               description, start date, finish date, and project key.
@@ -130,7 +133,10 @@ def create_result_dictionary(test_suites: dict) -> dict:
         duration = float(testsuite["time"])  # sec
         start_time = convert_time_to_xray_format(testsuite["timestamp"])  # str
         end_time = compute_end_time(start_time=start_time, duration=duration)  # str
-        summary = "Xray test execution summary"
+        if test_execution_summary:
+            summary = test_execution_summary
+        else:
+            summary = "Xray test execution summary"
         description = "Xray test execution description"
 
         test_execution_ticket = {
@@ -201,13 +207,13 @@ def is_parameterized_test(test_results: dict) -> bool:
     return len(test_keys_list) != len(test_keys_set)
 
 
-def reformat_xml_results(test_results: dict, test_execution_id: str | None = None) -> list[dict]:
+def reformat_xml_results(test_results: dict, test_execution_key: str | None = None) -> list[dict]:
     """
     Reformats a list of XML results dictionaries by merging them based on their 'testKey' key.
 
     :param test_results: A list of dictionaries where each dictionary contains 'info' (a dictionary of test metadata)
         and 'tests' (a list of test cases).
-    :param test_execution_id: the xray's test execution ticket id where to import the test results,
+    :param test_execution_key: the xray's test execution ticket key where to import the test results,
         if none is specified a new test execution ticket will be created
 
     :return: A list of merged test result dictionaries. Each dictionary contains 'info' (a dictionary of test metadata)
@@ -217,12 +223,12 @@ def reformat_xml_results(test_results: dict, test_execution_id: str | None = Non
     if is_parameterized_test(test_results=test_results):
         xray_test_ticket_new = merge_test_results_comments(test_results["tests"])
         parameterized_test_results = {"info": test_execution_ticket, "tests": xray_test_ticket_new}
-        if test_execution_id is not None:
-            parameterized_test_results["testExecutionKey"] = test_execution_id
+        if test_execution_key is not None:
+            parameterized_test_results["testExecutionKey"] = test_execution_key
         return [parameterized_test_results]
     else:
-        if test_execution_id is not None:
-            test_results["testExecutionKey"] = test_execution_id
+        if test_execution_key is not None:
+            test_results["testExecutionKey"] = test_execution_key
         return [test_results]
 
 
