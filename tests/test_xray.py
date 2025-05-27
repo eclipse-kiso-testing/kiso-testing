@@ -92,7 +92,6 @@ def test_extract_test_results_with_valid_file(mocker):
     results = extract_test_results(
         path_results=temp_file_path,
         merge_xml_files=False,
-        update_description=False,
         test_execution_key=None,
     )
 
@@ -107,7 +106,6 @@ def test_extract_test_results_with_invalid_file_extension():
         extract_test_results(
             path_results=temp_file_path,
             merge_xml_files=False,
-            update_description=False,
             test_execution_key=None,
         )
 

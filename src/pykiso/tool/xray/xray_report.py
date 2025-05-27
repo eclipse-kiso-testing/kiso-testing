@@ -96,15 +96,17 @@ def convert_time_to_xray_format(original_time: str) -> str:
     return original_time
 
 
-def create_result_dictionary(test_suites: dict, test_execution_summary: str | None = None) -> dict:
+def create_result_dictionary(
+    test_suites: dict, test_execution_summary: str | None = None, test_execution_description: str | None = None
+) -> dict:
     """
     Processes test suite data and generates a dictionary containing information
     about the test execution and individual test cases for Xray integration.
     :param test_suites: A dictionary containing test suite data. Each test suite
             should include details such as errors, failures, time, timestamp, and
             test cases.
-    :param test_execution_summary: the summary of the test execution ticket where to import the test results,
-        if none is specified by default the test execution summary is "Xray test execution summary"
+    :param test_execution_summary: update the test execution ticket description - otherwise, keep current summary
+    :param test_execution_description: update the test execution ticket description - otherwise, keep current description
 
     :return: A dictionary with two keys:
             - "info": Contains metadata about the test execution, including summary,
@@ -133,18 +135,16 @@ def create_result_dictionary(test_suites: dict, test_execution_summary: str | No
         duration = float(testsuite["time"])  # sec
         start_time = convert_time_to_xray_format(testsuite["timestamp"])  # str
         end_time = compute_end_time(start_time=start_time, duration=duration)  # str
-        if test_execution_summary:
-            summary = test_execution_summary
-        else:
-            summary = "Xray test execution summary"
-        description = "Xray test execution description"
-
+        # build the test execution ticket
         test_execution_ticket = {
-            "summary": summary,
-            "description": description,
             "startDate": start_time,
             "finishDate": end_time,
         }
+        # if there is a test execution key, update the summary and the description of the test execution ticket
+        if test_execution_summary is not None:
+            test_execution_ticket["summary"] = test_execution_summary
+        if test_execution_description is not None:
+            test_execution_ticket["description"] = test_execution_description
 
         if not isinstance(testsuite["testcase"], list):
             # if there is only one test case, it is not a list
@@ -154,9 +154,6 @@ def create_result_dictionary(test_suites: dict, test_execution_summary: str | No
         for testcase in testsuite["testcase"]:
             # for each test case -> build the xray test info
             name = testcase.get("name")
-            if name == "test_run":
-                continue
-
             # keep only test cases with a test_key in the decorator
             properties = testcase.get("properties")
             if properties is None:
@@ -190,8 +187,9 @@ def create_result_dictionary(test_suites: dict, test_execution_summary: str | No
             xray_test_ticket_list.append(xray_test_ticket)
 
     # update project key
-    project_key = xray_test_ticket["testKey"].split("-")[0]
-    test_execution_ticket["project"] = project_key
+    if xray_test_ticket:
+        project_key = xray_test_ticket["testKey"].split("-")[0]
+        test_execution_ticket["project"] = project_key
     return {"info": test_execution_ticket, "tests": xray_test_ticket_list}
 
 
