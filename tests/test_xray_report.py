@@ -135,8 +135,6 @@ def test_create_result_dictionary_with_single_testcase():
 
     expected_result = {
         "info": {
-            "summary": "Xray test execution summary",
-            "description": "Xray test execution description",
             "startDate": "2023-01-01T12:00:00+0000",
             "finishDate": "2023-01-01T12:00:10+0000",
             "project": "TEST",
@@ -171,8 +169,7 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_summa
 
     expected_result = {
         "info": {
-            "summary": "Xray test execution summary for this test",
-            "description": "Xray test execution description",
+            "summary": "Ticket summary",
             "startDate": "2023-01-01T12:00:00+0000",
             "finishDate": "2023-01-01T12:00:10+0000",
             "project": "TEST",
@@ -186,7 +183,83 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_summa
         ],
     }
 
-    assert create_result_dictionary(test_suites, "Xray test execution summary for this test") == expected_result
+    assert create_result_dictionary(test_suites, "Ticket summary") == expected_result
+
+
+def test_create_result_dictionary_with_single_testcase_with_test_execution_description():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        }
+    ]
+
+    expected_result = {
+        "info": {
+            "description": "Ticket description",
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            }
+        ],
+    }
+
+    assert create_result_dictionary(test_suites, test_execution_description="Ticket description") == expected_result
+
+
+def test_create_result_dictionary_with_single_testcase_with_test_execution_summary_and_test_execution_description():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        }
+    ]
+
+    expected_result = {
+        "info": {
+            "description": "Ticket description",
+            "summary": "Ticket summary",
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            }
+        ],
+    }
+
+    assert (
+        create_result_dictionary(
+            test_suites, test_execution_summary="Ticket summary", test_execution_description="Ticket description"
+        )
+        == expected_result
+    )
 
 
 def test_create_result_dictionary_with_multiple_testcases():
@@ -216,8 +289,8 @@ def test_create_result_dictionary_with_multiple_testcases():
 
     expected_result = {
         "info": {
-            "summary": "Xray test execution summary",
-            "description": "Xray test execution description",
+            "summary": "Ticket with multiple test cases",
+            "description": "Ticket description with multiple test cases",
             "startDate": "2023-01-01T12:00:00+0000",
             "finishDate": "2023-01-01T12:00:20+0000",
             "project": "TEST",
@@ -236,26 +309,14 @@ def test_create_result_dictionary_with_multiple_testcases():
         ],
     }
 
-    assert create_result_dictionary(test_suites) == expected_result
-
-
-def test_create_result_dictionary_with_missing_properties():
-    test_suites = [
-        {
-            "errors": "0",
-            "failures": "0",
-            "time": "5.0",
-            "timestamp": "2023-01-01T12:00:00",
-            "testcase": {
-                "name": "test_case_1",
-                "time": "5.0",
-                "timestamp": "2023-01-01T12:00:00",
-            },
-        }
-    ]
-
-    with pytest.raises(KeyError):
-        create_result_dictionary(test_suites)
+    assert (
+        create_result_dictionary(
+            test_suites,
+            test_execution_description="Ticket description with multiple test cases",
+            test_execution_summary="Ticket with multiple test cases",
+        )
+        == expected_result
+    )
 
 
 def test_create_result_dictionary_with_error_logs():
@@ -292,7 +353,14 @@ def test_create_result_dictionary_with_error_logs():
         ],
     }
 
-    assert create_result_dictionary(test_suites) == expected_result
+    assert (
+        create_result_dictionary(
+            test_suites,
+            test_execution_summary="Xray test execution summary",
+            test_execution_description="Xray test execution description",
+        )
+        == expected_result
+    )
 
 
 def test_is_parameterized_test_with_non_parameterized_tests():

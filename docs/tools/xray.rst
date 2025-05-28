@@ -9,46 +9,64 @@ The ``xray`` CLI utility takes your Pykiso Junit test results report and export 
 Upload your results
 -------------------
 
-To upload your results to Xray users have to follow the command :
+Upload the test results to an existing Xray test execution ticket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: bash
+To upload test results to an existing Xray test execution ticket, specify your Xray user ID, API key, server URL, and the path to the folder containing the JUNIT reports.
+You must provide the **test execution ticket key** to overwrite the results in a specific ticket.
 
-    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder
-
-Options:
-  --user TEXT                     Xray user id  [required]
-  --password TEXT                 Valid Xray API key (if not given ask at command prompt
-                                  level)  [optional]
-  --url TEXT                      URL of Xray server  [required]
-  --path-results PATH             Full path to the folder containing the JUNIT reports
-                                  [required]
-  --test-execution-key TEXT       Xray test execution ticket key's use to overwrite the
-                                  test results (e.g ABC-123) [optional][default value: None]
-  --test-execution-summary TEXT   Xray test execution summary that will be created (Jira ticket title) [optional]
-  --merge-xml-files               Merge all the xml files to be send in one xml file
-  --import-description            Import the test function description as the xray ticket description
-  --help                          Show this message and exit.
-
-
-The above command will create a new test execution ticket on the Xray side or overwrite an existing one with the test results.
-
-Write the test results on an existing test execution ticket
------------------------------------------------------------
-
-You can rewrite the test results on an existing test execution ticket, with the key of the test execution ticket:
 
 .. code:: bash
 
     xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key "ABC-123"
 
-Change the Xray test execution summary
---------------------------------------
+Options:
+  --user TEXT                         Xray user id  [required]
+  --password TEXT                     Valid Xray API key (if not given ask at command prompt
+                                      level)  [optional]
+  --url TEXT                          URL of Xray server  [required]
+  --path-results PATH                 Full path to the folder containing the JUNIT reports
+                                      [required]
+  --test-execution-key TEXT           Xray test execution ticket key's use to overwrite the
+                                      test results (e.g ABC-123) [optional][default value: None]
+  --test-execution-summary TEXT       Set or update the summary (Jira ticket title) of the Xray test execution ticket
+                                      [optional][default value: None] Required when creating a new test execution ticket;
+                                      optional when updating an existing one.
+  --test-execution-description TEXT   Set or update the description (Jira ticket title) of the Xray test execution ticket
+                                      [optional][default value: None] Required when creating a new test execution ticket;
+                                      optional when updating an existing one.
+  --merge-xml-files                   Merge all the xml files to be send in one xml file
+  --help                              Show this message and exit.
 
-You can rewrite the test execution summary (the tile on Jira ticket), by default it is "Xray test execution summary":
+
+
+Upload the test results on a new Xray test execution ticket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When creating a new test execution ticket, you must also specify the test execution **summary** and **description**.
+
 
 .. code:: bash
 
-    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-summary "New test execution summary"
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-summary "My test execution summary" --test-execution-description "My test execution description"
+
+Change the summary of the Xray test execution ticket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can rewrite the test execution summary (the title on Jira ticket):
+
+.. code:: bash
+
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key "ABC-123" --test-execution-summary "New test execution summary"
+
+Change the description of the Xray test execution ticket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can rewrite the test execution description:
+
+.. code:: bash
+
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key "ABC-123" --test-execution-description "New test execution description"
 
 
 Add the Xray decorator to the test functions
@@ -56,6 +74,9 @@ Add the Xray decorator to the test functions
 
 To link your test cases with Xray, you need to add the ``@pykiso.xray(test_key="KEY")`` decorator to your test functions.
 The ``test_key`` parameter should be the unique identifier of the test case in Xray.
+
+Tests w/o parameterized
+-----------------------
 
 Tests without parameterized
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
