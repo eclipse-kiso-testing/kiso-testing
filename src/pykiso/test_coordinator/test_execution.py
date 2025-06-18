@@ -120,7 +120,7 @@ def apply_tag_filter(all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, L
         for cli_tag_id, cli_tag_value in usr_tags.items():
             # skip any test case that doesn't define a CLI-provided tag name
             if cli_tag_id not in test_case.tag.keys():
-                test_case._skip_msg = f"provided tag {cli_tag_id!r} not present in test tags"
+                test_case._skip_msg = f"provided tag {cli_tag_id!r} not present in test tags"  # noqa: E713
                 return True
             # skip any test case that which tag value don't match the provided tag's value
             cli_tag_values = cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
@@ -438,6 +438,7 @@ def execute(
 
         test_suites = collect_test_suites(config["test_suite_list"], test_file_pattern.test_file)
         test_suites = handle_can_trace_strategy(config, test_suites)
+        test_suites = handle_log_file_strategy(config, test_suites)
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
 
@@ -508,6 +509,81 @@ def execute(
     return int(exit_code)
 
 
+def handle_log_file_strategy(config: dict[str, Any], test_suites: list[unittest.TestSuite]) -> list[unittest.TestSuite]:
+    """Setup the test to get a log file for every test or testCase if the user requested it
+        else just return the test suite passed in input
+
+    :param config: dict from converted YAML config file
+    :return: a list of all loaded test suites.
+
+    :return: a list of all loaded test suites with setUp and tearDown modified if needed.
+    """
+    if not config.get("log_file_strategy", False):
+        return test_suites
+
+    # Decorate function to call the start and stop pcan trace function
+    for suite in test_suites:
+        for test in suite._tests:
+            # If the user want to have one log file for a testCase we decorate the setUpClass and tearDownClass
+            if config["log_file_strategy"] == "testCase":
+                log_file_name = util.strclass(test.__class__).replace(".", "_").replace("-", "_")
+                test_class = test.__class__
+                test_class.setUpClass = start_log_file_decorator(test_class.setUpClass, log_file_name)
+                test_class.tearDownClass = stop_log_file_decorator(test_class.tearDownClass, log_file_name)
+
+
+_log_file_handler = []
+
+
+def start_log_file_decorator(func: Callable, log_file_name: str):
+    """Decorator that will call start logging before calling the function
+
+    :param func: function to execute
+    :param log_file_name: name of the log file to create
+    """
+
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        import logging
+
+        from ..logging_initializer import start_logging
+
+        global _log_file_handler
+        # Add datetime in log file name to not overwrite log file when rerunning test
+        log_path = Path.cwd() / (Path(log_file_name).stem + f"_{datetime.today().strftime('%Y%d%m%H%M%S')}.log")
+        start_logging(log_path=log_path)
+        # Add file handler to root logger and store it in global list
+        file_handler = logging.FileHandler(log_path, "a+")
+        logging.getLogger().addHandler(file_handler)
+        _log_file_handler.append(file_handler)
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def stop_log_file_decorator(func: Callable, log_file_name: str):
+    """Decorator that will remove all file handlers added by start_log_file_decorator from the root logger after the function call
+
+    :param func: function to execute
+    :param log_file_name: name of the log file to create
+    """
+
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        import logging
+
+        global _log_file_handler
+        try:
+            return func(*args, **kwargs)
+        finally:
+            for handler in _log_file_handler:
+                logging.getLogger().removeHandler(handler)
+                handler.close()
+            _log_file_handler.clear()
+
+    return decorator
+
+
 def handle_can_trace_strategy(
     config: dict[str, Any], test_suites: list[unittest.TestSuite]
 ) -> list[unittest.TestSuite]:
@@ -525,7 +601,7 @@ def handle_can_trace_strategy(
     if can_channel is None:
         return test_suites
 
-    # Decorate function to call the start and stop pcan trace function
+    # Decorate function to call the start and stop pcan trace
     list_class: list[type[unittest.TestCase]] = []
     for suite in test_suites:
         for test in suite._tests:
