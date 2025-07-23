@@ -88,6 +88,188 @@ class XrayPublisher:
 
         return json.loads(query_response.content)
 
+    def get_internal_id_from_key(self, jira_key: str) -> str:
+        """
+        Convert the Jira key to the internal issueId
+
+        :param jira_key: the jira key of the test execution (e.g ABC-123)
+
+        :return: the corresponding internal xray issue id
+        """
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.auth}"}
+
+        # GraphQL query
+        query = (
+            """
+        query {
+            getTestExecutions(jql: "key='%s'", limit: 1) {
+                results {
+                    issueId
+                }
+            }
+        }
+        """
+            % jira_key
+        )
+
+        payload = {"query": query}
+
+        try:
+            query_response = requests.request(
+                method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+            )
+
+            data = query_response.json()
+
+            if (
+                "data" in data
+                and "getTestExecutions" in data["data"]
+                and "results" in data["data"]["getTestExecutions"]
+                and len(data["data"]["getTestExecutions"]["results"]) > 0
+            ):
+                issue_id = data["data"]["getTestExecutions"]["results"][0]["issueId"]
+                return issue_id
+
+        except requests.exceptions.ConnectionError:
+            raise XrayException(f"Cannot connect to JIRA service at {self.endpoint}")
+        else:
+            query_response.raise_for_status()
+            return None
+
+    def get_test_execution_results(self, test_execution_id: str) -> list[str]:
+        """
+        Get the tests' issue ids inside the given test execution id
+
+        :param test_execution_id: the test execution id
+
+        :return: the list of issue ids inside the test execution results
+        """
+
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.auth}"}
+
+        # GraphQL query
+        query = (
+            """
+        query {
+            getTestExecution(issueId: "%s") {
+                issueId
+                tests(limit: 100) {
+                    total
+                    start
+                    limit
+                    results {
+                        issueId
+                        testType {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+        """
+            % test_execution_id
+        )
+
+        payload = {"query": query}
+        try:
+            query_response = requests.request(
+                method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+            )
+
+            data = query_response.json()
+
+            # Extract issueIds from results
+            if (
+                "data" in data
+                and "getTestExecution" in data["data"]
+                and "tests" in data["data"]["getTestExecution"]
+                and "results" in data["data"]["getTestExecution"]["tests"]
+            ):
+                results = data["data"]["getTestExecution"]["tests"]["results"]
+                issue_ids = [result["issueId"] for result in results]
+                return issue_ids
+
+        except requests.exceptions.ConnectionError:
+            raise XrayException(f"Cannot connect to JIRA service at {self.endpoint}")
+
+        else:
+            query_response.raise_for_status()
+
+        return []
+
+    def get_jira_keys_for_tests(self, issue_ids: list[str]) -> list[str]:
+        """
+        Get Jira keys for each test
+
+        :param issue_ids: list of xray issue ids
+
+        :return: the jira keys corresponding to the issue ids
+        """
+
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.auth}"}
+
+        jira_keys = []
+
+        for issue_id in issue_ids:
+            query = (
+                """
+            query {
+                getTest(issueId: "%s") {
+                    jira(fields: ["key", "summary"])
+                    testType {
+                        name
+                    }
+                }
+            }
+            """
+                % issue_id
+            )
+
+            payload = {"query": query}
+
+            try:
+                query_response = requests.request(
+                    method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+                )
+
+                data = query_response.json()
+
+                if (
+                    "data" in data
+                    and "getTest" in data["data"]
+                    and data["data"]["getTest"]
+                    and "jira" in data["data"]["getTest"]
+                ):
+                    jira_key = data["data"]["getTest"]["jira"]["key"]
+                    jira_keys.append(jira_key)
+
+            except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError) as e:  # noqa F841
+                continue
+
+        return jira_keys
+
+    def get_all_test_jira_keys(self, test_execution_id: str) -> list[str]:
+        """
+        Get all Jira keys for tests in a test execution
+
+        :param test_execution_id: the test execution id (e.g ABC-1234)
+
+        :return: the list of jira keys inside the test execution results
+        """
+
+        # Convert the provided jira key to the internal issue id
+        xray_id = self.get_internal_id_from_key(test_execution_id)
+        # Get all issue IDs from the test execution
+        issue_ids = self.get_test_execution_results(xray_id)
+
+        if not issue_ids:
+            return []
+
+        # Get all Jira keys for these issues
+        jira_keys = self.get_jira_keys_for_tests(issue_ids)
+
+        return jira_keys
+
 
 def upload_test_results(
     base_url: str,
@@ -115,9 +297,38 @@ def upload_test_results(
     return responses
 
 
+def get_test_execution_jira_test_keys(
+    base_url: str,
+    user: str,
+    password: str,
+    test_execution_id: str,
+) -> list[str]:
+    """
+    Upload all given results to xray.
+
+    :param base_url: the xray's base url
+    :param user: the user's session id
+    :param password: the user's password
+    :param results: the test results
+
+    :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
+    """
+
+    graphql_url = "https://xray.cloud.getxray.app/api/v2/graphql"
+    # authenticate: get the correct token from the authenticate endpoint
+    client_secret_auth = ClientSecretAuth(base_url=base_url, client_id=user, client_secret=password, verify=True)
+    xray_publisher = XrayPublisher(base_url=base_url, endpoint=graphql_url, auth=client_secret_auth)
+
+    # publish: post request to send the test results to xray endpoint
+    jira_keys = xray_publisher.get_all_test_jira_keys(test_execution_id)
+    return jira_keys
+
+
 def extract_test_results(
+    ctx,
     path_results: Path,
     merge_xml_files: bool,
+    not_append_test_results: bool,
     test_execution_key: str | None = None,
     test_execution_summary: str | None = None,
     test_execution_description: str | None = None,
@@ -126,8 +337,10 @@ def extract_test_results(
     Extract the test results linked to an xray test key. Filter the JUnit xml files generated by the execution of tests,
     to keep only the results of tests marked with an xray decorator. A temporary file is created with the test results.
 
+    :param ctx: click context
     :param path_results: the path to the xml files
     :param merge_xml_files: merge all the files to return only a list with one element
+    :param not_append_test_results: if True, only overwrite the existing ones (update only), else append the new results from the .xml file(s) to the test execution
     :param test_execution_key: the xray's test execution ticket key where to import the test results,
         if none is specified a new test execution ticket will be created
     :param test_execution_summary: update the test execution ticket summary - otherwise, keep current summary
@@ -158,8 +371,17 @@ def extract_test_results(
             with open(file) as xml_file:
                 data_dict = xmltodict.parse(xml_file.read(), attr_prefix="")
 
+            # get the test execution test results keys in case of overwrite only
+            if test_execution_key and not_append_test_results:
+                print("Preparing the ticket for update...")
+                jira_keys = get_test_execution_jira_test_keys(
+                    ctx.obj["URL"], ctx.obj["USER"], ctx.obj["PASSWORD"], test_execution_key
+                )
+            else:
+                jira_keys = []
+
             xray_dict = create_result_dictionary(
-                data_dict["testsuites"]["testsuite"], test_execution_summary, test_execution_description
+                data_dict["testsuites"]["testsuite"], jira_keys, test_execution_summary, test_execution_description
             )
             xml_results = reformat_xml_results(xray_dict, test_execution_key)
         return xml_results

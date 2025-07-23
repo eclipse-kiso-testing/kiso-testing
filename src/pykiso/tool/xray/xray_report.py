@@ -97,7 +97,10 @@ def convert_time_to_xray_format(original_time: str) -> str:
 
 
 def create_result_dictionary(
-    test_suites: dict, test_execution_summary: str | None = None, test_execution_description: str | None = None
+    test_suites: dict,
+    jira_keys: list[str],
+    test_execution_summary: str | None = None,
+    test_execution_description: str | None = None,
 ) -> dict:
     """
     Processes test suite data and generates a dictionary containing information
@@ -160,6 +163,10 @@ def create_result_dictionary(
                 continue
 
             test_key = get_test_key_from_property(properties["property"])
+            if jira_keys:
+                # skip the keys not in the jira_keys list if any
+                if test_key not in jira_keys:
+                    continue
             duration = float(testcase["time"])  # sec
             start_time = convert_time_to_xray_format(testcase["timestamp"])
             end_time = compute_end_time(start_time=start_time, duration=duration)

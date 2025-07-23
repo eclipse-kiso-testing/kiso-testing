@@ -76,6 +76,14 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
     is_flag=True,
     required=False,
 )
+@click.option(
+    "-na",
+    "--not-append-test-results",
+    help="Do not append new test keys from the .xml(s) to the updated test execution, only overwrite already existing ones",
+    is_flag=True,
+    default=False,
+    required=False,
+)
 @click.pass_context
 def cli_upload(
     ctx,
@@ -84,6 +92,7 @@ def cli_upload(
     test_execution_description: str,
     test_execution_summary: str,
     merge_xml_files: bool,
+    not_append_test_results: bool,
 ) -> None:
     """Upload the JUnit xml test results on xray.
 
@@ -93,6 +102,7 @@ def cli_upload(
     :param test_execution_description: update the test execution ticket description - otherwise, keep current description
     :param test_execution_summary: update the test execution ticket summary - otherwise, keep current summary
     :param merge_xml_files: if True, merge the xml files, else do nothing
+    :param not_append_test_results: if True, only overwrite the existing ones (update only), else append the new results from the .xml file(s) to the test execution
 
     """
     # If a new test execution ticket is being created (no key), the user should pass a description and a summary.
@@ -104,8 +114,10 @@ def cli_upload(
     # From the JUnit xml files found, create a list of the dictionary per test results marked with an xray decorator.
     path_results = Path(path_results).resolve()
     test_results = extract_test_results(
+        ctx,
         path_results=path_results,
         merge_xml_files=merge_xml_files,
+        not_append_test_results=not_append_test_results,
         test_execution_key=test_execution_key,
         test_execution_summary=test_execution_summary,
         test_execution_description=test_execution_description,
