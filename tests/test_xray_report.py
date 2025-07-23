@@ -148,7 +148,98 @@ def test_create_result_dictionary_with_single_testcase():
         ],
     }
 
-    assert create_result_dictionary(test_suites) == expected_result
+    assert create_result_dictionary(test_suites, jira_keys=["TEST-1"]) == expected_result
+
+
+def test_create_result_dictionary_with_jira_keys():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        },
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_2",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-2"}]},
+            },
+        },
+    ]
+
+    expected_result = {
+        "info": {
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            },
+            {
+                "testKey": "TEST-2",
+                "comment": "test_case_2: Successful execution",
+                "status": "PASSED",
+            },
+        ],
+    }
+
+    assert create_result_dictionary(test_suites, jira_keys=["TEST-1", "TEST-2"]) == expected_result
+
+
+def test_create_result_dictionary_without_jira_keys():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        }
+    ]
+
+    expected_result = {
+        "info": {
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            }
+        ],
+    }
+
+    assert (
+        create_result_dictionary(
+            test_suites,
+            jira_keys=[],
+        )
+        == expected_result
+    )
 
 
 def test_create_result_dictionary_with_single_testcase_with_test_execution_summary():
@@ -183,7 +274,7 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_summa
         ],
     }
 
-    assert create_result_dictionary(test_suites, "Ticket summary") == expected_result
+    assert create_result_dictionary(test_suites, ["TEST-1"], "Ticket summary") == expected_result
 
 
 def test_create_result_dictionary_with_single_testcase_with_test_execution_description():
@@ -218,7 +309,10 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_descr
         ],
     }
 
-    assert create_result_dictionary(test_suites, test_execution_description="Ticket description") == expected_result
+    assert (
+        create_result_dictionary(test_suites, ["TEST-1"], test_execution_description="Ticket description")
+        == expected_result
+    )
 
 
 def test_create_result_dictionary_with_single_testcase_with_test_execution_summary_and_test_execution_description():
@@ -256,7 +350,10 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_summa
 
     assert (
         create_result_dictionary(
-            test_suites, test_execution_summary="Ticket summary", test_execution_description="Ticket description"
+            test_suites,
+            jira_keys=["TEST-1"],
+            test_execution_summary="Ticket summary",
+            test_execution_description="Ticket description",
         )
         == expected_result
     )
@@ -312,6 +409,7 @@ def test_create_result_dictionary_with_multiple_testcases():
     assert (
         create_result_dictionary(
             test_suites,
+            jira_keys=["TEST-1", "TEST-2"],
             test_execution_description="Ticket description with multiple test cases",
             test_execution_summary="Ticket with multiple test cases",
         )
@@ -356,6 +454,7 @@ def test_create_result_dictionary_with_error_logs():
     assert (
         create_result_dictionary(
             test_suites,
+            jira_keys=["TEST-1"],
             test_execution_summary="Xray test execution summary",
             test_execution_description="Xray test execution description",
         )
@@ -509,3 +608,109 @@ def test_reformat_xml_results_with_non_parameterized_tests():
 
     result = reformat_xml_results(test_results, test_execution_key)
     assert result == expected_result
+
+
+def test_create_result_dictionary_with_none_properties():
+    """Test create_result_dictionary when testcase has properties=None - should skip the testcase."""
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "1800",  # 30 minutes
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": [
+                {
+                    "name": "test_case_with_properties",
+                    "time": "900",
+                    "timestamp": "2023-01-01T12:00:00",
+                    "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+                },
+                {
+                    "name": "test_case_without_properties",
+                    "time": "900",
+                    "timestamp": "2023-01-01T12:15:00",
+                    "properties": None,  # This testcase should be skipped
+                },
+            ],
+        }
+    ]
+
+    jira_keys = []
+
+    result = create_result_dictionary(test_suites, jira_keys)
+
+    # Only the testcase with properties should be included
+    expected_result = {
+        "info": {
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:30:00+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {"testKey": "TEST-1", "comment": "test_case_with_properties: Successful execution", "status": "PASSED"}
+        ],
+    }
+
+    assert result == expected_result
+    # Verify that only one test is included (the one with properties)
+    assert len(result["tests"]) == 1
+    assert result["tests"][0]["testKey"] == "TEST-1"
+
+
+def test_create_result_dictionary_with_test_key_not_in_jira_keys():
+    """Test create_result_dictionary when test_key is not in jira_keys list - should skip the testcase."""
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "1800",  # 30 minutes
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": [
+                {
+                    "name": "test_case_in_jira_keys",
+                    "time": "900",
+                    "timestamp": "2023-01-01T12:00:00",
+                    "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+                },
+                {
+                    "name": "test_case_not_in_jira_keys",
+                    "time": "900",
+                    "timestamp": "2023-01-01T12:15:00",
+                    "properties": {"property": [{"name": "test_key", "value": "TEST-999"}]},  # Not in jira_keys
+                },
+                {
+                    "name": "test_case_also_in_jira_keys",
+                    "time": "900",
+                    "timestamp": "2023-01-01T12:30:00",
+                    "properties": {"property": [{"name": "test_key", "value": "TEST-2"}]},
+                },
+            ],
+        }
+    ]
+
+    # Only TEST-1 and TEST-2 are in the jira_keys list, TEST-999 should be skipped
+    jira_keys = ["TEST-1", "TEST-2"]
+
+    result = create_result_dictionary(test_suites, jira_keys)
+
+    # Only the testcases with test keys in jira_keys should be included
+    expected_result = {
+        "info": {
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:30:00+0000",
+            "project": "TEST",
+        },
+        "tests": [
+            {"testKey": "TEST-1", "comment": "test_case_in_jira_keys: Successful execution", "status": "PASSED"},
+            {"testKey": "TEST-2", "comment": "test_case_also_in_jira_keys: Successful execution", "status": "PASSED"},
+        ],
+    }
+
+    assert result == expected_result
+    # Verify that only two tests are included (the ones with test keys in jira_keys)
+    assert len(result["tests"]) == 2
+    assert result["tests"][0]["testKey"] == "TEST-1"
+    assert result["tests"][1]["testKey"] == "TEST-2"
+    # Verify that TEST-999 is not included
+    test_keys_in_result = [test["testKey"] for test in result["tests"]]
+    assert "TEST-999" not in test_keys_in_result

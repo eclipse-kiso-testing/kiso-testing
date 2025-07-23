@@ -36,6 +36,8 @@ Options:
                                       [optional][default value: None] Required when creating a new test execution ticket;
                                       optional when updating an existing one.
   --merge-xml-files                   Merge all the xml files to be send in one xml file
+  --not-append-test-results, -na      Do not append new test keys from the .xml(s) to the updated test execution,
+                                      only overwrite already existing ones
   --help                              Show this message and exit.
 
 
@@ -67,6 +69,23 @@ You can rewrite the test execution description:
 .. code:: bash
 
     xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key "ABC-123" --test-execution-description "New test execution description"
+
+
+Update existing test results only (do not append new tests)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, when uploading test results to an existing test execution ticket, new test results from the XML files are appended to the test execution.
+If you want to only update the results of tests that already exist in the test execution ticket (without adding new tests), use the ``--not-append-test-results`` flag:
+
+.. code:: bash
+
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-execution-key "ABC-123" --not-append-test-results
+
+This is useful when you want to:
+
+- Update only specific test results without changing the test execution scope
+- Maintain a fixed set of tests in your test execution ticket
+- Prevent accidental addition of new tests to an existing test execution
 
 
 Add the Xray decorator to the test functions
