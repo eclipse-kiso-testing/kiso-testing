@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from .xray import extract_test_results, upload_test_results
+from .xray import extract_test_results, get_jira_test_keys_from_test_execution_ticket, upload_test_results
 
 
 @click.group()
@@ -111,6 +111,17 @@ def cli_upload(
             "Creating a new test execution ticket requires both a description and a summary in the CLI options"
         )
 
+    # If the user chooses not to append new test results to an existing test execution ticket,
+    # retrieve the existing test keys from Jira for the specified test execution ticket.
+    # If appending is allowed, there is no need to fetch the existing test keys.
+    if not_append_test_results and test_execution_key:
+        print("Preparing the ticket for update...")
+        jira_keys = get_jira_test_keys_from_test_execution_ticket(
+            ctx.obj["URL"], ctx.obj["USER"], ctx.obj["PASSWORD"], test_execution_key
+        )
+    else:
+        jira_keys = []
+
     # From the JUnit xml files found, create a list of the dictionary per test results marked with an xray decorator.
     path_results = Path(path_results).resolve()
     test_results = extract_test_results(
@@ -118,6 +129,7 @@ def cli_upload(
         path_results=path_results,
         merge_xml_files=merge_xml_files,
         not_append_test_results=not_append_test_results,
+        jira_keys=jira_keys,
         test_execution_key=test_execution_key,
         test_execution_summary=test_execution_summary,
         test_execution_description=test_execution_description,

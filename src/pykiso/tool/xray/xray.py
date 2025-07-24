@@ -290,28 +290,28 @@ def upload_test_results(
     endpoint_url = "https://xray.cloud.getxray.app/api/v2/import/execution"
     # authenticate: get the correct token from the authenticate endpoint
     client_secret_auth = ClientSecretAuth(base_url=base_url, client_id=user, client_secret=password, verify=True)
-    xray_publisher = XrayPublisher(base_url=base_url, endpoint=endpoint_url, auth=client_secret_auth)
+    xray_publisher = XrayPublisher(base_url=base_url, endpoint=endpoint_url, auth=client_secret_auth)  # XrayInterface
 
     # publish: post request to send the test results to xray endpoint
     responses = xray_publisher.publish_xml_result(data=results)
     return responses
 
 
-def get_test_execution_jira_test_keys(
+def get_jira_test_keys_from_test_execution_ticket(
     base_url: str,
     user: str,
     password: str,
     test_execution_id: str,
 ) -> list[str]:
     """
-    Upload all given results to xray.
+    Get the jira keys of the xray test tickets already presents in the test execution ticket.
 
     :param base_url: the xray's base url
     :param user: the user's session id
     :param password: the user's password
-    :param results: the test results
+    :param test_execution_id: the test execution id (e.g ABC-1234)
 
-    :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
+    :return: the list of jira keys inside the test execution ticket containing the test results
     """
 
     graphql_url = "https://xray.cloud.getxray.app/api/v2/graphql"
@@ -325,10 +325,9 @@ def get_test_execution_jira_test_keys(
 
 
 def extract_test_results(
-    ctx,
     path_results: Path,
     merge_xml_files: bool,
-    not_append_test_results: bool,
+    jira_keys: list[str],
     test_execution_key: str | None = None,
     test_execution_summary: str | None = None,
     test_execution_description: str | None = None,
@@ -340,7 +339,7 @@ def extract_test_results(
     :param ctx: click context
     :param path_results: the path to the xml files
     :param merge_xml_files: merge all the files to return only a list with one element
-    :param not_append_test_results: if True, only overwrite the existing ones (update only), else append the new results from the .xml file(s) to the test execution
+    :param jira_keys: the list of jira keys inside the test execution ticket containing the test results
     :param test_execution_key: the xray's test execution ticket key where to import the test results,
         if none is specified a new test execution ticket will be created
     :param test_execution_summary: update the test execution ticket summary - otherwise, keep current summary
@@ -370,15 +369,6 @@ def extract_test_results(
         for file in file_to_parse:
             with open(file) as xml_file:
                 data_dict = xmltodict.parse(xml_file.read(), attr_prefix="")
-
-            # get the test execution test results keys in case of overwrite only
-            if test_execution_key and not_append_test_results:
-                print("Preparing the ticket for update...")
-                jira_keys = get_test_execution_jira_test_keys(
-                    ctx.obj["URL"], ctx.obj["USER"], ctx.obj["PASSWORD"], test_execution_key
-                )
-            else:
-                jira_keys = []
 
             xray_dict = create_result_dictionary(
                 data_dict["testsuites"]["testsuite"], jira_keys, test_execution_summary, test_execution_description

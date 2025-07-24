@@ -108,6 +108,7 @@ def create_result_dictionary(
     :param test_suites: A dictionary containing test suite data. Each test suite
             should include details such as errors, failures, time, timestamp, and
             test cases.
+    :param jira_keys: the list of jira keys inside the test execution ticket containing the test results
     :param test_execution_summary: update the test execution ticket description - otherwise, keep current summary
     :param test_execution_description: update the test execution ticket description - otherwise, keep current description
 
