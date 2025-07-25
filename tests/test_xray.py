@@ -6,13 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from pykiso.tool.xray.xray import (
-    ClientSecretAuth,
-    XrayException,
-    XrayPublisher,
-    extract_test_results,
-    upload_test_results,
-)
+from pykiso.tool.xray.xray import ClientSecretAuth, XrayException, XrayInterface, extract_test_results
 
 
 def test_client_secret_auth_endpoint_url():
@@ -46,16 +40,15 @@ def test_publish_xml_result(mock_request):
     mock_response.content = '{"id": "123", "key": "TEST-1", "issue": "Issue"}'
     mock_request.return_value = mock_response
 
-    auth = MagicMock()
-    publisher = XrayPublisher(base_url="https://example.com", endpoint="/endpoint", auth=auth)
+    publisher = XrayInterface(base_url="https://example.com", client_id="user", client_secret="password")
     result = publisher.publish_xml_result(data={"key": "value"})
 
     mock_request.assert_called_once_with(
         method="POST",
-        url="/endpoint",
+        url="https://example.com/api/v2/import/execution",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         json={"key": "value"},
-        auth=auth,
+        auth=publisher.auth,
         verify=True,
     )
     assert result == {"id": "123", "key": "TEST-1", "issue": "Issue"}
@@ -65,13 +58,13 @@ def test_publish_xml_result(mock_request):
 def test_publish_xml_result_connection_error(mock_request):
     mock_request.side_effect = requests.exceptions.ConnectionError
 
-    publisher = XrayPublisher(
+    publisher = XrayInterface(
         base_url="https://example.com",
-        endpoint="/endpoint",
-        auth=MagicMock(),
+        client_id="user",
+        client_secret="password"
     )
 
-    with pytest.raises(XrayException, match="Cannot connect to JIRA service at /endpoint"):
+    with pytest.raises(XrayException, match="Cannot connect to JIRA service at https://example.com/api/v2/import/execution"):
         publisher.publish_xml_result(data={"key": "value"})
 
 
@@ -92,6 +85,7 @@ def test_extract_test_results_with_valid_file(mocker):
     results = extract_test_results(
         path_results=temp_file_path,
         merge_xml_files=False,
+        jira_keys=[],
         test_execution_key=None,
     )
 
@@ -106,6 +100,7 @@ def test_extract_test_results_with_invalid_file_extension():
         extract_test_results(
             path_results=temp_file_path,
             merge_xml_files=False,
+            jira_keys=[],
             test_execution_key=None,
         )
 
@@ -143,68 +138,10 @@ def test_client_secret_auth_call_invalid_token(mock_post):
     assert request.headers["Authorization"] == "Bearer invalid_token"
 
 
-def test_xray_publisher_endpoint_url():
-    publisher = XrayPublisher(
-        base_url="https://example.com/",
-        endpoint="/endpoint",
-        auth=MagicMock(),
-    )
-    assert publisher.endpoint_url == "https://example.com/endpoint"
-
-
-@patch("pykiso.tool.xray.xray.ClientSecretAuth")
-@patch("pykiso.tool.xray.xray.XrayPublisher")
-def test_upload_test_results_success(mock_xray_publisher, mock_client_secret_auth):
-    mock_publisher_instance = MagicMock()
-    mock_publisher_instance.publish_xml_result.return_value = {"id": "123", "key": "TEST-1", "issue": "Issue"}
-    mock_xray_publisher.return_value = mock_publisher_instance
-
-    mock_auth_instance = MagicMock()
-    mock_client_secret_auth.return_value = mock_auth_instance
-
-    result = upload_test_results(
+def test_xray_interface_endpoint_url():
+    publisher = XrayInterface(
         base_url="https://example.com",
-        user="user",
-        password="password",
-        results={"key": "value"},
+        client_id="user",
+        client_secret="password"
     )
-
-    mock_client_secret_auth.assert_called_once_with(
-        base_url="https://example.com", client_id="user", client_secret="password", verify=True
-    )
-    mock_xray_publisher.assert_called_once_with(
-        base_url="https://example.com",
-        endpoint="https://xray.cloud.getxray.app/api/v2/import/execution",
-        auth=mock_auth_instance,
-    )
-    mock_publisher_instance.publish_xml_result.assert_called_once_with(data={"key": "value"})
-    assert result == {"id": "123", "key": "TEST-1", "issue": "Issue"}
-
-
-@patch("pykiso.tool.xray.xray.ClientSecretAuth")
-@patch("pykiso.tool.xray.xray.XrayPublisher")
-def test_upload_test_results_connection_error(mock_xray_publisher, mock_client_secret_auth):
-    mock_publisher_instance = MagicMock()
-    mock_publisher_instance.publish_xml_result.side_effect = XrayException("Cannot connect to JIRA service")
-    mock_xray_publisher.return_value = mock_publisher_instance
-
-    mock_auth_instance = MagicMock()
-    mock_client_secret_auth.return_value = mock_auth_instance
-
-    with pytest.raises(XrayException, match="Cannot connect to JIRA service"):
-        upload_test_results(
-            base_url="https://example.com",
-            user="user",
-            password="password",
-            results={"key": "value"},
-        )
-
-    mock_client_secret_auth.assert_called_once_with(
-        base_url="https://example.com", client_id="user", client_secret="password", verify=True
-    )
-    mock_xray_publisher.assert_called_once_with(
-        base_url="https://example.com",
-        endpoint="https://xray.cloud.getxray.app/api/v2/import/execution",
-        auth=mock_auth_instance,
-    )
-    mock_publisher_instance.publish_xml_result.assert_called_once_with(data={"key": "value"})
+    assert publisher.endpoint_url == "https://example.com/api/v2/import/execution"

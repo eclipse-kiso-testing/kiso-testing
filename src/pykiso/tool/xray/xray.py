@@ -51,20 +51,24 @@ class ClientSecretAuth(AuthBase):
         return r
 
 
-class XrayPublisher:
-    """Xray Publisher command API."""
+class XrayInterface:
+    """Xray Interface for both REST API and GraphQL API."""
 
-    def __init__(self, base_url: str, endpoint: str, auth: ClientSecretAuth, verify: bool | str = True) -> None:
+    def __init__(self, base_url: str, client_id: str, client_secret: str, verify: bool | str = True) -> None:
         self.base_url = base_url[:-1] if base_url.endswith("/") else base_url
-        self.endpoint = endpoint
-        self.rest_api_version = API_VERSION
-        self.auth = auth
         self.verify = verify
+
+        # Create authentication
+        self.auth = ClientSecretAuth(base_url=base_url, client_id=client_id, client_secret=client_secret, verify=verify)
+
+        # Define the endpoints
+        self.rest_endpoint = f"{self.base_url}/api/v2/import/execution"
+        self.graphql_endpoint = f"{self.base_url}/api/v2/graphql"
 
     @property
     def endpoint_url(self) -> str:
-        """Return full URL complete url to send the post request.to the xray server."""
-        return self.base_url + self.endpoint
+        """Return full URL complete url to send the post request to the xray server."""
+        return self.rest_endpoint
 
     def publish_xml_result(self, data: dict) -> dict[str, str]:
         """
@@ -79,10 +83,10 @@ class XrayPublisher:
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         try:
             query_response = requests.request(
-                method="POST", url=self.endpoint, headers=headers, json=data, auth=self.auth, verify=self.verify
+                method="POST", url=self.rest_endpoint, headers=headers, json=data, auth=self.auth, verify=self.verify
             )
         except requests.exceptions.ConnectionError:
-            raise XrayException(f"Cannot connect to JIRA service at {self.endpoint}")
+            raise XrayException(f"Cannot connect to JIRA service at {self.rest_endpoint}")
         else:
             query_response.raise_for_status()
 
@@ -116,7 +120,12 @@ class XrayPublisher:
 
         try:
             query_response = requests.request(
-                method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+                method="POST",
+                url=self.graphql_endpoint,
+                headers=headers,
+                json=payload,
+                auth=self.auth,
+                verify=self.verify,
             )
 
             data = query_response.json()
@@ -131,7 +140,7 @@ class XrayPublisher:
                 return issue_id
 
         except requests.exceptions.ConnectionError:
-            raise XrayException(f"Cannot connect to JIRA service at {self.endpoint}")
+            raise XrayException(f"Cannot connect to JIRA service at {self.graphql_endpoint}")
         else:
             query_response.raise_for_status()
             return None
@@ -173,7 +182,12 @@ class XrayPublisher:
         payload = {"query": query}
         try:
             query_response = requests.request(
-                method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+                method="POST",
+                url=self.graphql_endpoint,
+                headers=headers,
+                json=payload,
+                auth=self.auth,
+                verify=self.verify,
             )
 
             data = query_response.json()
@@ -190,7 +204,7 @@ class XrayPublisher:
                 return issue_ids
 
         except requests.exceptions.ConnectionError:
-            raise XrayException(f"Cannot connect to JIRA service at {self.endpoint}")
+            raise XrayException(f"Cannot connect to JIRA service at {self.graphql_endpoint}")
 
         else:
             query_response.raise_for_status()
@@ -229,7 +243,12 @@ class XrayPublisher:
 
             try:
                 query_response = requests.request(
-                    method="POST", url=self.endpoint, headers=headers, json=payload, auth=self.auth, verify=self.verify
+                    method="POST",
+                    url=self.graphql_endpoint,
+                    headers=headers,
+                    json=payload,
+                    auth=self.auth,
+                    verify=self.verify,
                 )
 
                 data = query_response.json()
@@ -270,58 +289,25 @@ class XrayPublisher:
 
         return jira_keys
 
+    def upload_test_results(self, data: dict) -> dict[str, str]:
+        """
+        Upload all given results to xray.
 
-def upload_test_results(
-    base_url: str,
-    user: str,
-    password: str,
-    results: str,
-) -> dict[str, str]:
-    """
-    Upload all given results to xray.
+        :param data: the test results
 
-    :param base_url: the xray's base url
-    :param user: the user's session id
-    :param password: the user's password
-    :param results: the test results
+        :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
+        """
+        return self.publish_xml_result(data=data)
 
-    :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
-    """
-    endpoint_url = "https://xray.cloud.getxray.app/api/v2/import/execution"
-    # authenticate: get the correct token from the authenticate endpoint
-    client_secret_auth = ClientSecretAuth(base_url=base_url, client_id=user, client_secret=password, verify=True)
-    xray_publisher = XrayPublisher(base_url=base_url, endpoint=endpoint_url, auth=client_secret_auth)  # XrayInterface
+    def get_jira_test_keys_from_test_execution_ticket(self, test_execution_id: str) -> list[str]:
+        """
+        Get the jira keys of the xray test tickets already presents in the test execution ticket.
 
-    # publish: post request to send the test results to xray endpoint
-    responses = xray_publisher.publish_xml_result(data=results)
-    return responses
+        :param test_execution_id: the test execution id (e.g ABC-1234)
 
-
-def get_jira_test_keys_from_test_execution_ticket(
-    base_url: str,
-    user: str,
-    password: str,
-    test_execution_id: str,
-) -> list[str]:
-    """
-    Get the jira keys of the xray test tickets already presents in the test execution ticket.
-
-    :param base_url: the xray's base url
-    :param user: the user's session id
-    :param password: the user's password
-    :param test_execution_id: the test execution id (e.g ABC-1234)
-
-    :return: the list of jira keys inside the test execution ticket containing the test results
-    """
-
-    graphql_url = "https://xray.cloud.getxray.app/api/v2/graphql"
-    # authenticate: get the correct token from the authenticate endpoint
-    client_secret_auth = ClientSecretAuth(base_url=base_url, client_id=user, client_secret=password, verify=True)
-    xray_publisher = XrayPublisher(base_url=base_url, endpoint=graphql_url, auth=client_secret_auth)
-
-    # publish: post request to send the test results to xray endpoint
-    jira_keys = xray_publisher.get_all_test_jira_keys(test_execution_id)
-    return jira_keys
+        :return: the list of jira keys inside the test execution ticket containing the test results
+        """
+        return self.get_all_test_jira_keys(test_execution_id)
 
 
 def extract_test_results(

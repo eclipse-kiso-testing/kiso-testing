@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from .xray import extract_test_results, get_jira_test_keys_from_test_execution_ticket, upload_test_results
+from .xray import XrayInterface, extract_test_results
 
 
 @click.group()
@@ -111,24 +111,25 @@ def cli_upload(
             "Creating a new test execution ticket requires both a description and a summary in the CLI options"
         )
 
+    # Create XrayInterface once for authentication optimization
+    xray_interface = XrayInterface(
+        base_url=ctx.obj["URL"], client_id=ctx.obj["USER"], client_secret=ctx.obj["PASSWORD"]
+    )
+
     # If the user chooses not to append new test results to an existing test execution ticket,
     # retrieve the existing test keys from Jira for the specified test execution ticket.
     # If appending is allowed, there is no need to fetch the existing test keys.
     if not_append_test_results and test_execution_key:
         print("Preparing the ticket for update...")
-        jira_keys = get_jira_test_keys_from_test_execution_ticket(
-            ctx.obj["URL"], ctx.obj["USER"], ctx.obj["PASSWORD"], test_execution_key
-        )
+        jira_keys = xray_interface.get_jira_test_keys_from_test_execution_ticket(test_execution_key)
     else:
         jira_keys = []
 
     # From the JUnit xml files found, create a list of the dictionary per test results marked with an xray decorator.
     path_results = Path(path_results).resolve()
     test_results = extract_test_results(
-        ctx,
         path_results=path_results,
         merge_xml_files=merge_xml_files,
-        not_append_test_results=not_append_test_results,
         jira_keys=jira_keys,
         test_execution_key=test_execution_key,
         test_execution_summary=test_execution_summary,
@@ -137,14 +138,7 @@ def cli_upload(
 
     responses = []
     for result in test_results:
-        # Upload the test results into Xray
-        responses.append(
-            upload_test_results(
-                base_url=ctx.obj["URL"],
-                user=ctx.obj["USER"],
-                password=ctx.obj["PASSWORD"],
-                results=result,
-            )
-        )
+        # Upload the test results into Xray using the same interface instance
+        responses.append(xray_interface.upload_test_results(data=result))
     responses_result_str = json.dumps(responses, indent=2)
     print(f"The test results can be found in JIRA by: {responses_result_str}")
