@@ -181,9 +181,13 @@ def add_logging_level(level_name: str, level_num: int):
 
     def log_for_level(self, message, *args, **kwargs):
         if self.isEnabledFor(level_num):
+            # Use stacklevel=2 to skip this wrapper frame and show the actual caller
+            kwargs.setdefault("stacklevel", 2)
             self._log(level_num, message, args, **kwargs)
 
     def log_to_root(message, *args, **kwargs):
+        # Use stacklevel=2 to skip this wrapper frame and show the actual caller
+        kwargs.setdefault("stacklevel", 2)
         logging.log(level_num, message, *args, **kwargs)
 
     if not hasattr(logging, level_name):
