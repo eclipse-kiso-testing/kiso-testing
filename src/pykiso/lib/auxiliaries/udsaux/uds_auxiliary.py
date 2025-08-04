@@ -183,7 +183,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             False
         """
         try:
-            return self.send_uds(msg_to_send, response_required)
+            return self.send_uds(msg_to_send, response_required) or True
         except self.errors.ResponseNotReceivedError as exc:
             raise exc
         except Exception:
