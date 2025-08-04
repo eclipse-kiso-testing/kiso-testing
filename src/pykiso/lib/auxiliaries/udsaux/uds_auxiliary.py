@@ -413,9 +413,3 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         if self.is_tester_present:
             self.stop_tester_present_sender()
         return super()._delete_auxiliary_instance()
-
-
-# def uds() -> UdsAuxiliary:
-#     raise NotImplementedError
-
-# u: UdsAuxiliary = uds()
