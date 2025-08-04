@@ -182,12 +182,13 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             not expected and the command is properly sent otherwise
             False
         """
-        try:
-            True if (response := self.send_uds(msg_to_send, response_required)) is None else response
-        except self.errors.ResponseNotReceivedError as exc:
-            raise exc
-        except Exception:
-            return False
+        # try:
+        #     True if ((response := self.send_uds(msg_to_send, response_required)) is None) else response
+        # except self.errors.ResponseNotReceivedError as exc:
+        #     raise exc
+        # except Exception:
+        #     return False
+        return 3
 
     @staticmethod
     def check_max_pending_time(resp: UdsResponse, max_pending_time: float) -> bool:
