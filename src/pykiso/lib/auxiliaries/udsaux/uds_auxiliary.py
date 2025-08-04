@@ -23,7 +23,7 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Literal, Optional, Union, overload
 
 try:
     import can
@@ -90,26 +90,46 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         """
         self.channel._cc_send(msg=data, remote_id=req_id)
 
-    def send_uds_raw(
+    # Response is required, it is returned
+    @overload
+    def send_uds(
         self,
         msg_to_send: Union[bytes, List[int], tuple],
-        timeout_in_s: float = 6,
+    ) -> UdsResponse:
+        ...
+
+    # Response is required, it is returned (explicit alias kept for backwards compatibility)
+    @overload
+    def send_uds(
+        self,
+        msg_to_send: Union[bytes, List[int], tuple],
+        response_required: Literal[True] = True,
+    ) -> UdsResponse:
+        ...
+
+    # Response ignored, `None` is returned
+    @overload
+    def send_uds(
+        self,
+        msg_to_send: Union[bytes, List[int], tuple],
+        response_required: Literal[False] = False,
+    ) -> None:
+        ...
+
+    def send_uds(
+        self,
+        msg_to_send: Union[bytes, List[int], tuple],
         response_required: bool = True,
-    ) -> Union[UdsResponse, bool]:
+    ) -> Union[UdsResponse, None]:
         """Send a UDS diagnostic request to the target ECU and check response.
 
         :param msg_to_send: can uds raw bytes to be sent
-        :param timeout_in_s: not used, actual timeout in seconds for the response can be
-            configured with the uds_aux.config.uds_layer.p2_can_client parameter
-            inside the yaml config file. (default value is 5s)
         :param response_required: Wait for a response if True
 
         :raise ResponseNotReceivedError: raised when no answer has been received
         :raise Exception: raised when the raw message could not be send properly
 
-        :return: the raw uds response's bytes, or True if a response is
-            not expected and the command is properly sent otherwise
-            False
+        :return: the raw uds response's bytes if `response_required` is set, else None
         """
         try:
             if log.isEnabledFor(logging.getLogger().level):
@@ -122,13 +142,13 @@ class UdsAuxiliary(UdsBaseAuxiliary):
                 responseRequired=response_required,
                 tpWaitTime=self.tp_waiting_time,
             )
-        except Exception:
+        except Exception as exc:
             log.exception("Error while sending uds raw request")
-            return False
+            raise exc
 
         if resp is None:
             if not response_required:
-                return True
+                return
             else:
                 raise self.errors.ResponseNotReceivedError(msg_to_send)
 
@@ -139,6 +159,35 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         )
         log.internal_info("UDS response received %s", resp)
         return resp
+
+    def send_uds_raw(
+        self,
+        msg_to_send: Union[bytes, List[int], tuple],
+        timeout_in_s: float = 6,
+        response_required: bool = True,
+    ) -> Union[UdsResponse, bool]:
+        """Send a UDS diagnostic request to the target ECU and check response.
+        Deprecated alias of `send_uds` that returns `False` on error,
+        kept for backwards compatibility
+
+        :param msg_to_send: can uds raw bytes to be sent
+        :param timeout_in_s: not used, actual timeout in seconds for the response can be
+            configured with the uds_aux.config.uds_layer.p2_can_client parameter
+            inside the yaml config file. (default value is 5s)
+        :param response_required: Wait for a response if True
+
+        :raise ResponseNotReceivedError: raised when no answer has been received
+
+        :return: the raw uds response's bytes, or True if a response is
+            not expected and the command is properly sent otherwise
+            False
+        """
+        try:
+            return self.send_uds(msg_to_send, response_required)
+        except self.errors.ResponseNotReceivedError as exc:
+            raise exc
+        except Exception:
+            return False
 
     @staticmethod
     def check_max_pending_time(resp: UdsResponse, max_pending_time: float) -> bool:
@@ -364,3 +413,9 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         if self.is_tester_present:
             self.stop_tester_present_sender()
         return super()._delete_auxiliary_instance()
+
+
+# def uds() -> UdsAuxiliary:
+#     raise NotImplementedError
+
+# u: UdsAuxiliary = uds()

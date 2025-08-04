@@ -26,7 +26,7 @@ Find below a complete configuration example :
             com: can_channel
         config:
           # you can specify your odx file by using odx_file_path parameter
-          # and instead of using send_uds_raw method use the send_uds_config
+          # and instead of using send_uds method use the send_uds_config
           # for a more human readable command
           odx_file_path: null
           request_id : 0x123
@@ -75,14 +75,10 @@ Send UDS Raw Request
 
 Send UDS request as list of raw bytes.
 
-The method send_uds_raw(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds_raw`) takes one mandatory parameter msg_to_send and one optional : timeout_in_s
+The method send_uds(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds`) takes one mandatory parameter msg_to_send and one optional : timeout_in_s
 The parameter msg_to_send is simply the UDS request payload which is a list of bytes.
 
-The optional parameter timeout_in_s (by default fixed to 5 seconds) simply represent the maximum
-amount of time in second to wait for a response from the device under test. If this timeout is reached, the
-uds-auxiliary stop to acquire and log an error.
-
-The method send_uds_raw method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
+The method send_uds method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
 <https://docs.python.org/3/library/collections.html#collections.UserList>`_.
 UserList allow to keep property of the list, meanwhile attributes can be set, for UdsResponse, defined attributes
 refer to the positivity of the response, and its NRC if negative.
@@ -117,7 +113,7 @@ Here is an example:
 
         def test_run(self):
             # Set extended session
-            diag_session_response = uds_aux.send_uds_raw([0x10, 0x03])
+            diag_session_response = uds_aux.send_uds([0x10, 0x03])
             self.assertEqual(diag_session_response[:2], [0x50, 0x03])
             self.assertEqual(type(diag_session_response), UserList)
             self.assertFalse(diag_session_response.is_negative)
