@@ -75,7 +75,7 @@ Send UDS Raw Request
 
 Send UDS request as list of raw bytes.
 
-The method send_uds(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds`) takes one mandatory parameter msg_to_send and one optional : timeout_in_s
+The method send_uds(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds`) takes one mandatory parameter msg_to_send
 The parameter msg_to_send is simply the UDS request payload which is a list of bytes.
 
 The method send_uds method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
