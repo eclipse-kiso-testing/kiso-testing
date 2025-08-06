@@ -4,7 +4,7 @@ auxiliaries:
         com: can_channel
     config:
       # you can specify your odx file by using odx_file_path parameter
-      # and instead of using send_uds_raw method use the send_uds_config
+      # and instead of using send_uds method use the send_uds_config
       # for a more human readable command
       odx_file_path: ~
       request_id : 0x123
