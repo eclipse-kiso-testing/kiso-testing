@@ -96,7 +96,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         self,
         msg_to_send: Union[bytes, List[int], tuple],
     ) -> UdsResponse:
-        ...
+        ...  # pragma: nocover
 
     # Response is required, it is returned (explicit alias kept for backwards compatibility)
     @overload
@@ -105,7 +105,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         msg_to_send: Union[bytes, List[int], tuple],
         response_required: Literal[True] = True,
     ) -> UdsResponse:
-        ...
+        ...  # pragma: nocover
 
     # Response ignored, `None` is returned
     @overload
@@ -114,7 +114,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         msg_to_send: Union[bytes, List[int], tuple],
         response_required: Literal[False] = False,
     ) -> None:
-        ...
+        ...  # pragma: nocover
 
     def send_uds(
         self,
