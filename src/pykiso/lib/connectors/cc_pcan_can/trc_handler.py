@@ -70,7 +70,7 @@ class TypedMessage(Message):
         else:
             args = [
                 f"timestamp={self.timestamp}",
-                f"arbitration_id={self.arbitration_id: #x}",
+                f"arbitration_id={self.arbitration_id:#x}",  # noqa: E231
                 f"is_extended_id={self.is_extended_id}",
             ]
 
@@ -86,7 +86,7 @@ class TypedMessage(Message):
         if self.channel is not None:
             args.append(f"channel={self.channel!r}")
 
-        data = [f"{byte: #02x}" for byte in self.data]
+        data = [f"{byte:#02x}" for byte in self.data]  # noqa: E231
         args += [f"dlc={self.dlc}", f"data=[{', '.join(data)}]"]
 
         if self.is_fd:
@@ -253,11 +253,11 @@ class TRCWriterCanFD(TRCWriter):
             arb_id = f"{msg.arbitration_id}"
         else:
             if msg.is_extended_id:
-                arb_id = f"{msg.arbitration_id: 07X}"
+                arb_id = f"{msg.arbitration_id:07X}"  # noqa: E231
             else:
-                arb_id = f"{msg.arbitration_id: 04X}"
+                arb_id = f"{msg.arbitration_id:04X}"  # noqa: E231
 
-        data = [f"{byte: 02X}" for byte in msg.data]
+        data = [f"{byte:02X}" for byte in msg.data]  # noqa: E231
 
         # For the time python-can was doing subtraction with the first message timestamp
         # which is incorrect. It should be with the start time of the trace otherwise the
