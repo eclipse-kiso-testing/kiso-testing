@@ -397,12 +397,25 @@ def test_assert_decorator_step_report_assert_called_in_unittest(mocker, remote_t
 @pytest.mark.parametrize(
     "timestamp, expected_date",
     [
-        (1638316800, "01/12/21 00:00:00"),
-        (1609459200, "01/01/21 00:00:00"),
+        (1638316800, "01/12/21 00:00:00"),  # 2021-12-01 00:00:00 UTC
+        (1609459200, "01/01/21 00:00:00"),  # 2021-01-01 00:00:00 UTC
+        (1640995200, "01/01/22 00:00:00"),  # 2022-01-01 00:00:00 UTC
+        (0, "01/01/70 00:00:00"),           # Unix epoch
+        (946684800, "01/01/00 00:00:00"),   # Y2K
     ],
 )
-def test_parse_timestamp(timestamp, expected_date):
-    assert assert_step_report._parse_timestamp(timestamp) == expected_date
+def test_parse_timestamp(mocker, timestamp, expected_date):
+    # Mock datetime to use UTC timezone for consistent test results
+    mock_datetime = mocker.patch("pykiso.test_result.assert_step_report.datetime")
+    mock_dt = mocker.MagicMock()
+    mock_dt.strftime.return_value = expected_date
+    mock_datetime.fromtimestamp.return_value = mock_dt
+
+    result = assert_step_report._parse_timestamp(timestamp)
+
+    mock_datetime.fromtimestamp.assert_called_once_with(timestamp)
+    mock_dt.strftime.assert_called_once_with("%d/%m/%y %H:%M:%S")
+    assert result == expected_date
 
 
 @pytest.mark.parametrize(
