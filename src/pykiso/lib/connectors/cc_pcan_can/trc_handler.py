@@ -70,7 +70,7 @@ class TypedMessage(Message):
         else:
             args = [
                 f"timestamp={self.timestamp}",
-                f"arbitration_id={self.arbitration_id:#x}",
+                f"arbitration_id={self.arbitration_id: #x}",
                 f"is_extended_id={self.is_extended_id}",
             ]
 
@@ -86,7 +86,7 @@ class TypedMessage(Message):
         if self.channel is not None:
             args.append(f"channel={self.channel!r}")
 
-        data = [f"{byte:#02x}" for byte in self.data]
+        data = [f"{byte: #02x}" for byte in self.data]
         args += [f"dlc={self.dlc}", f"data=[{', '.join(data)}]"]
 
         if self.is_fd:
@@ -184,7 +184,14 @@ class TRCReaderCanFD(TRCReader):
 
         channel = int(cols[bus]) if bus is not None else 1
         dlc = dlc
-        data = bytearray([int(cols[i + self.columns["D"]], 16) for i in range(length)])
+
+        # Parse data - handle space-separated hex values in a single column
+        data = bytearray(length)
+        if length > 0 and self.columns["D"] < len(cols) and cols[self.columns["D"]].strip():
+            hex_values = cols[self.columns["D"]].strip().split()
+            parsed_bytes = [int(val, 16) for val in hex_values if val]
+            data[: len(parsed_bytes)] = parsed_bytes
+
         is_rx = cols[self.columns["d"]] == "Rx"
         is_fd = type_ in ["FD", "FB", "FE", "BI"]
         bitrate_switch = type_ in ["FB", " FE"]
@@ -246,11 +253,11 @@ class TRCWriterCanFD(TRCWriter):
             arb_id = f"{msg.arbitration_id}"
         else:
             if msg.is_extended_id:
-                arb_id = f"{msg.arbitration_id:07X}"
+                arb_id = f"{msg.arbitration_id: 07X}"
             else:
-                arb_id = f"{msg.arbitration_id:04X}"
+                arb_id = f"{msg.arbitration_id: 04X}"
 
-        data = [f"{byte:02X}" for byte in msg.data]
+        data = [f"{byte: 02X}" for byte in msg.data]
 
         # For the time python-can was doing subtraction with the first message timestamp
         # which is incorrect. It should be with the start time of the trace otherwise the
