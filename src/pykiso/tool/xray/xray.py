@@ -354,10 +354,12 @@ def extract_test_results(
         # use xml to json
         for file in file_to_parse:
             with open(file) as xml_file:
-                data_dict = xmltodict.parse(xml_file.read(), attr_prefix="")
+                # Ensure 'testsuite' is always a list for consistent processing.
+                data_dict = xmltodict.parse(xml_file.read(), attr_prefix="", force_list=("testsuite",))
 
+            test_suites = data_dict["testsuites"]["testsuite"]
             xray_dict = create_result_dictionary(
-                data_dict["testsuites"]["testsuite"], jira_keys, test_execution_summary, test_execution_description
+                test_suites, jira_keys, test_execution_summary, test_execution_description
             )
             xml_results = reformat_xml_results(xray_dict, test_execution_key)
         return xml_results
