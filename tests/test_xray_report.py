@@ -359,6 +359,52 @@ def test_create_result_dictionary_with_single_testcase_with_test_execution_summa
     )
 
 
+def test_create_result_dictionary_with_single_testcase_with_test_plan_and_test_execution_summary_and_test_execution_description():
+    test_suites = [
+        {
+            "errors": "0",
+            "failures": "0",
+            "time": "10.5",
+            "timestamp": "2023-01-01T12:00:00",
+            "testcase": {
+                "name": "test_case_1",
+                "time": "10.5",
+                "timestamp": "2023-01-01T12:00:00",
+                "properties": {"property": [{"name": "test_key", "value": "TEST-1"}]},
+            },
+        }
+    ]
+
+    expected_result = {
+        "info": {
+            "description": "Ticket description",
+            "summary": "Ticket summary",
+            "startDate": "2023-01-01T12:00:00+0000",
+            "finishDate": "2023-01-01T12:00:10+0000",
+            "project": "TEST",
+            "testPlanKey": "PROJ-123",
+        },
+        "tests": [
+            {
+                "testKey": "TEST-1",
+                "comment": "test_case_1: Successful execution",
+                "status": "PASSED",
+            }
+        ],
+    }
+
+    assert (
+        create_result_dictionary(
+            test_suites,
+            jira_keys=["TEST-1"],
+            test_execution_summary="Ticket summary",
+            test_execution_description="Ticket description",
+            test_plan_key="PROJ-123",
+        )
+        == expected_result
+    )
+
+
 def test_create_result_dictionary_with_multiple_testcases():
     test_suites = [
         {

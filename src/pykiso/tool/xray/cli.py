@@ -70,6 +70,13 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
     type=click.STRING,
 )
 @click.option(
+    "--test-plan-key",
+    help="Key of the test plan ticket where to add new test execution for the test results from a JUnit xml",
+    required=False,
+    default=None,
+    type=click.STRING,
+)
+@click.option(
     "-m",
     "--merge-xml-files",
     help="Merge multiple xml files to be send in one xml file",
@@ -91,6 +98,7 @@ def cli_upload(
     test_execution_key: str,
     test_execution_description: str,
     test_execution_summary: str,
+    test_plan_key: str,
     merge_xml_files: bool,
     not_append_test_results: bool,
 ) -> None:
@@ -101,10 +109,15 @@ def cli_upload(
     :param test_execution_key: test execution key where to upload the test results
     :param test_execution_description: update the test execution ticket description - otherwise, keep current description
     :param test_execution_summary: update the test execution ticket summary - otherwise, keep current summary
+    :param test_plan_key: test plan key where to create a new test execution ticket for the test results
     :param merge_xml_files: if True, merge the xml files, else do nothing
     :param not_append_test_results: if True, only overwrite the existing ones (update only), else append the new results from the .xml file(s) to the test execution
 
     """
+    if test_plan_key and test_execution_key:
+        raise ValueError(
+            "You cannot specify both a test plan key and a test execution key. " "Please use either one or the other."
+        )
     # If a new test execution ticket is being created (no key), the user should pass a description and a summary.
     if not test_execution_key and (not test_execution_description or not test_execution_summary):
         raise ValueError(
@@ -134,6 +147,7 @@ def cli_upload(
         test_execution_key=test_execution_key,
         test_execution_summary=test_execution_summary,
         test_execution_description=test_execution_description,
+        test_plan_key=test_plan_key,
     )
 
     responses = []

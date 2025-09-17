@@ -101,6 +101,7 @@ def create_result_dictionary(
     jira_keys: list[str],
     test_execution_summary: str | None = None,
     test_execution_description: str | None = None,
+    test_plan_key: str | None = None,
 ) -> dict:
     """
     Processes test suite data and generates a dictionary containing information
@@ -111,6 +112,7 @@ def create_result_dictionary(
     :param jira_keys: the list of jira keys inside the test execution ticket containing the test results
     :param test_execution_summary: update the test execution ticket description - otherwise, keep current summary
     :param test_execution_description: update the test execution ticket description - otherwise, keep current description
+    :param test_plan_key: test plan key where to create a new test execution ticket for the test results
 
     :return: A dictionary with two keys:
             - "info": Contains metadata about the test execution, including summary,
@@ -144,6 +146,10 @@ def create_result_dictionary(
             "startDate": start_time,
             "finishDate": end_time,
         }
+        if test_plan_key is not None:
+            # if a test plan key is specified, link the test results to the test plan
+            test_execution_ticket["testPlanKey"] = test_plan_key
+
         # if there is a test execution key, update the summary and the description of the test execution ticket
         if test_execution_summary is not None:
             test_execution_ticket["summary"] = test_execution_summary

@@ -6,8 +6,11 @@ Export results to Xray
 
 The ``xray`` CLI utility takes your Pykiso Junit test results report and export them on `Xray <https://xray.cloud.getxray.app/>`__.
 
-Upload your results
--------------------
+Upload your results on XRAY using JUNIT xml files
+-------------------------------------------------
+
+Upload the test results to a test execution ticket
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Upload the test results to an existing Xray test execution ticket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,11 +38,12 @@ Options:
   --test-execution-description TEXT   Set or update the description (Jira ticket title) of the Xray test execution ticket
                                       [optional][default value: None] Required when creating a new test execution ticket;
                                       optional when updating an existing one.
+  --test-plan-key TEXT                Xray test plan ticket key's where to add a new test execution for the test results from a JUNIT xml
+                                      (e.g PROJ-456) [optional][default value: None]
   --merge-xml-files                   Merge all the xml files to be send in one xml file
   --not-append-test-results, -na      Do not append new test keys from the .xml(s) to the updated test execution,
                                       only overwrite already existing ones
   --help                              Show this message and exit.
-
 
 
 Upload the test results on a new Xray test execution ticket
@@ -86,6 +90,22 @@ This is useful when you want to:
 - Update only specific test results without changing the test execution scope
 - Maintain a fixed set of tests in your test execution ticket
 - Prevent accidental addition of new tests to an existing test execution
+
+Upload the test results to a test plan ticket
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Upload the test results on an existing test plan ticket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A test plan contains multiple test executions.
+A test plan has a unique JIRA key. A test execution also has a unique JIRA key.
+The user must provide either a test plan key or a test execution key, not both.
+If a test plan key is given, results are uploaded only to new test execution(s) linked to the test plan.
+When creating a new test execution ticket, you must also specify the test execution **summary** and **description**.
+
+.. code:: bash
+
+    xray --user USER_ID --password MY_API_KEY --url "https://xray.cloud.getxray.app/" upload --path-results path/reports/folder --test-plan-key "PROJ-456" --test-execution-summary "My test execution summary" --test-execution-description "My test execution description"
 
 
 Add the Xray decorator to the test functions
