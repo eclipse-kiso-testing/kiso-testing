@@ -187,7 +187,7 @@ description = "The uncompromising code formatter."
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"pykitest\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"pykitest\""
 files = [
     {file = "black-25.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:759e7ec1e050a15f89b770cefbf91ebee8917aac5c20483bc2d80a6c3a04df32"},
     {file = "black-25.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:0e519ecf93120f34243e6b0054db49c00a35f84f195d5bce7e9f5cfc578fc2da"},
@@ -302,7 +302,7 @@ files = [
     {file = "certifi-2025.1.31-py3-none-any.whl", hash = "sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"},
     {file = "certifi-2025.1.31.tar.gz", hash = "sha256:3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651"},
 ]
-markers = {main = "extra == \"testrail\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"testrail\""}
 
 [[package]]
 name = "cffi"
@@ -509,7 +509,7 @@ files = [
     {file = "charset_normalizer-3.4.1-py3-none-any.whl", hash = "sha256:d98b1668f06378c6dbefec3b92299716b931cd4e6061f3c875a71ced1780ab85"},
     {file = "charset_normalizer-3.4.1.tar.gz", hash = "sha256:44251f18cd68a75b56585dd00dae26183e102cd5e0f9f1466e6df5da2ed64ea3"},
 ]
-markers = {main = "extra == \"testrail\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"testrail\""}
 
 [[package]]
 name = "click"
@@ -788,7 +788,7 @@ description = "HTTP/2-based RPC framework"
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"grpc\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"grpc\""
 files = [
     {file = "grpcio-1.71.0-cp310-cp310-linux_armv7l.whl", hash = "sha256:c200cb6f2393468142eb50ab19613229dcc7829b5ccee8b658a36005f6669fdd"},
     {file = "grpcio-1.71.0-cp310-cp310-macosx_12_0_universal2.whl", hash = "sha256:b2266862c5ad664a380fbbcdbdb8289d71464c42a8c29053820ee78ba0119e5d"},
@@ -1027,7 +1027,7 @@ files = [
     {file = "isort-6.0.1-py3-none-any.whl", hash = "sha256:2dc5d7f65c9678d94c88dfc29161a320eec67328bc97aad576874cb4be1e9615"},
     {file = "isort-6.0.1.tar.gz", hash = "sha256:1cb5df28dfbc742e490c5e41bad6da41b805b0a8be7bc93cd0fb2a8a890ac450"},
 ]
-markers = {main = "extra == \"pykitest\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"pykitest\""}
 
 [package.extras]
 colors = ["colorama"]
@@ -1225,7 +1225,7 @@ description = "Python port of markdown-it. Markdown parsing, done right!"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"testrail\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"testrail\""
 files = [
     {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
     {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
@@ -1342,7 +1342,7 @@ description = "Markdown URL utilities"
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"testrail\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"testrail\""
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -1422,7 +1422,7 @@ description = "Type system extensions for programs checked with the mypy type ch
 optional = true
 python-versions = ">=3.5"
 groups = ["main"]
-markers = "extra == \"pykitest\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"pykitest\""
 files = [
     {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
     {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
@@ -1471,7 +1471,7 @@ description = "Utility library for gitignore style pattern matching of file path
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"pykitest\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"pykitest\""
 files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
@@ -1509,7 +1509,7 @@ files = [
     {file = "platformdirs-4.3.7-py3-none-any.whl", hash = "sha256:a03875334331946f13c549dbd8f4bac7a13a50a895a0eb1e8c6a8ace80d40a94"},
     {file = "platformdirs-4.3.7.tar.gz", hash = "sha256:eb437d586b6a0986388f0d6f74aa0cde27b48d0e3d66843640bfb6bdcdb6e351"},
 ]
-markers = {main = "extra == \"pykitest\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"pykitest\""}
 
 [package.extras]
 docs = ["furo (>=2024.8.6)", "proselint (>=0.14)", "sphinx (>=8.1.3)", "sphinx-autodoc-typehints (>=3)"]
@@ -1558,7 +1558,7 @@ description = ""
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"grpc\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"grpc\""
 files = [
     {file = "protobuf-4.25.8-cp310-abi3-win32.whl", hash = "sha256:504435d831565f7cfac9f0714440028907f1975e4bed228e58e72ecfff58a1e0"},
     {file = "protobuf-4.25.8-cp310-abi3-win_amd64.whl", hash = "sha256:bd551eb1fe1d7e92c1af1d75bdfa572eff1ab0e5bf1736716814cdccdb2360f9"},
@@ -1580,7 +1580,7 @@ description = "Cross-platform lib for process and system monitoring in Python.  
 optional = true
 python-versions = ">=3.6"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"debugger\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"debugger\" or extra == \"plugins\""
 files = [
     {file = "psutil-7.0.0-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:101d71dc322e3cffd7cea0650b09b3d08b8e7c4109dd6809fe452dfd00e58b25"},
     {file = "psutil-7.0.0-cp36-abi3-macosx_11_0_arm64.whl", hash = "sha256:39db632f6bb862eeccf56660871433e111b6ea58f2caea825571951d4b6aa3da"},
@@ -1755,7 +1755,7 @@ files = [
     {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
     {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
 ]
-markers = {main = "extra == \"testrail\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"testrail\""}
 
 [package.extras]
 windows-terminal = ["colorama (>=0.4.6)"]
@@ -1767,7 +1767,7 @@ description = "Please use python-uds instead, this is a refactored version with 
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"can\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"can\" or extra == \"plugins\""
 files = [
     {file = "pykiso-python-uds-3.2.0.tar.gz", hash = "sha256:598919e660aa9815532f5337a4944f5e2314579eef22b357059de39e85328eef"},
     {file = "pykiso_python_uds-3.2.0-py3-none-any.whl", hash = "sha256:d36b0a935192de1f8535b5757d138472e24e566d77f0bd060730d2562d2f2611"},
@@ -1786,7 +1786,7 @@ description = "Python interface for SEGGER J-Link."
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"debugger\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"debugger\" or extra == \"plugins\""
 files = [
     {file = "pylink_square-1.2.1-py2.py3-none-any.whl", hash = "sha256:ceb8341812416ef8f17d08810486b1dac68a871ee8c1e2f94232d791c58db810"},
     {file = "pylink_square-1.2.1.tar.gz", hash = "sha256:4b84b5fd1c22546189324e0ac6c716eb67a90bf7c18dfe50450924a4055bc348"},
@@ -1891,7 +1891,7 @@ description = "Python Serial Port Extension"
 optional = true
 python-versions = "*"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"serial\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"plugins\" or extra == \"serial\""
 files = [
     {file = "pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"},
     {file = "pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb"},
@@ -2018,7 +2018,7 @@ description = "Python VISA bindings for GPIB, RS232, TCPIP and USB instruments"
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"instrument\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"instrument\" or extra == \"plugins\""
 files = [
     {file = "pyvisa-1.15.0-py3-none-any.whl", hash = "sha256:e3ac8d9e863fbdbbe7e6d4d91401bceb7914d1c4a558a89b2cc755789f1e8309"},
     {file = "pyvisa-1.15.0.tar.gz", hash = "sha256:cec3cb91703a2849f6faa42b1ecd7689a0175baabff8ca33fce9f45934ce45e6"},
@@ -2034,7 +2034,7 @@ description = "Pure Python implementation of a VISA library."
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"plugins\" or extra == \"instrument\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"instrument\" or extra == \"plugins\""
 files = [
     {file = "PyVISA-py-0.5.3.tar.gz", hash = "sha256:4c80954ce454582169ecfd7117b3df8c3b668bd62073aa6798e92d3d1395f58a"},
     {file = "PyVISA_py-0.5.3-py3-none-any.whl", hash = "sha256:9f876de5945560421424c62b7880f328b59530fac6fbcbe604ae71646632b331"},
@@ -2150,7 +2150,7 @@ files = [
     {file = "requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"},
     {file = "requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"},
 ]
-markers = {main = "extra == \"testrail\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"testrail\""}
 
 [package.dependencies]
 certifi = ">=2017.4.17"
@@ -2169,7 +2169,7 @@ description = "Render rich text, tables, progress bars, syntax highlighting, mar
 optional = true
 python-versions = ">=3.8.0"
 groups = ["main"]
-markers = "extra == \"testrail\" or extra == \"all\""
+markers = "extra == \"all\" or extra == \"testrail\""
 files = [
     {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
     {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
@@ -2254,7 +2254,7 @@ files = [
     {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
     {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
 ]
-markers = {main = "extra == \"plugins\" or extra == \"debugger\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"debugger\" or extra == \"plugins\""}
 
 [[package]]
 name = "sniffio"
@@ -2490,14 +2490,14 @@ test = ["pytest"]
 
 [[package]]
 name = "starlette"
-version = "0.49.0"
+version = "0.49.1"
 description = "The little ASGI library that shines."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "starlette-0.49.0-py3-none-any.whl", hash = "sha256:6f3988f55dda3fd36e5640aeaceee5b691063e0ebc4d7851e1c3a6695fbdc8ba"},
-    {file = "starlette-0.49.0.tar.gz", hash = "sha256:cb75dfe3267b99caf9036db355601f8c6092c4d50d132b3724cb373766cb2ab1"},
+    {file = "starlette-0.49.1-py3-none-any.whl", hash = "sha256:d92ce9f07e4a3caa3ac13a79523bd18e3bc0042bb8ff2d759a8e7dd0e1859875"},
+    {file = "starlette-0.49.1.tar.gz", hash = "sha256:481a43b71e24ed8c43b11ea02f5353d77840e01480881b8cb5a26b8cae64a8cb"},
 ]
 
 [package.dependencies]
@@ -2575,7 +2575,7 @@ files = [
     {file = "tomli-2.2.1-py3-none-any.whl", hash = "sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc"},
     {file = "tomli-2.2.1.tar.gz", hash = "sha256:cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff"},
 ]
-markers = {main = "(extra == \"pykitest\" or extra == \"all\") and python_version == \"3.10\"", dev = "python_version == \"3.10\""}
+markers = {main = "(extra == \"all\" or extra == \"pykitest\") and python_version == \"3.10\"", dev = "python_version == \"3.10\""}
 
 [[package]]
 name = "tomlkit"
@@ -2671,7 +2671,7 @@ files = [
     {file = "urllib3-2.4.0-py3-none-any.whl", hash = "sha256:4e16665048960a0900c702d4a66415956a584919c03361cac9f1df5c5dd7e813"},
     {file = "urllib3-2.4.0.tar.gz", hash = "sha256:414bc6535b787febd7567804cc015fee39daab8ad86268f1310a9250697de466"},
 ]
-markers = {main = "extra == \"testrail\" or extra == \"all\""}
+markers = {main = "extra == \"all\" or extra == \"testrail\""}
 
 [package.extras]
 brotli = ["brotli (>=1.0.9) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=0.8.0) ; platform_python_implementation != \"CPython\""]
