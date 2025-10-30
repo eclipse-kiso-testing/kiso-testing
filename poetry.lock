@@ -2029,25 +2029,29 @@ typing_extensions = ">=4.0.0"
 
 [[package]]
 name = "pyvisa-py"
-version = "0.5.3"
+version = "0.8.1"
 description = "Pure Python implementation of a VISA library."
 optional = true
-python-versions = ">=3.7"
+python-versions = ">=3.10"
 groups = ["main"]
 markers = "extra == \"all\" or extra == \"instrument\" or extra == \"plugins\""
 files = [
-    {file = "PyVISA-py-0.5.3.tar.gz", hash = "sha256:4c80954ce454582169ecfd7117b3df8c3b668bd62073aa6798e92d3d1395f58a"},
-    {file = "PyVISA_py-0.5.3-py3-none-any.whl", hash = "sha256:9f876de5945560421424c62b7880f328b59530fac6fbcbe604ae71646632b331"},
+    {file = "pyvisa_py-0.8.1-py3-none-any.whl", hash = "sha256:31208a2933c1793b4e829ba5f07d265b83f280668df440ee7ee6ac505dea4ee9"},
+    {file = "pyvisa_py-0.8.1.tar.gz", hash = "sha256:db53d3219d971d16b8f7c764a93e08475875063635b9ad8ea3c988439833ccdd"},
 ]
 
 [package.dependencies]
-pyvisa = ">=1.12.0"
-typing-extensions = "*"
+pyvisa = ">=1.15.0"
+typing_extensions = "*"
 
 [package.extras]
 gpib-ctypes = ["gpib-ctypes (>=0.3.0)"]
+hislip-discovery = ["zeroconf"]
+psutil = ["psutil"]
 serial = ["pyserial (>=3.0)"]
 usb = ["pyusb"]
+usb-full = ["libusb-package", "pyusb"]
+vicp = ["pyvicp", "zeroconf"]
 
 [[package]]
 name = "pywin32"
@@ -2907,4 +2911,4 @@ testrail = ["requests", "rich"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "28e50e6e5135cccce808c1e7f2e1898fbb1c2d08407302e89f55fa4fe9cb657a"
+content-hash = "24a2edc96591033bccd3d2b82c17c4d9ca0431a9c1460b6ff973f49ff059042e"
