@@ -44,7 +44,7 @@ isort = { version = ">=5.11.4", optional = true }
 junitparser = "^3.2.0"
 MarkupSafe = "~2.0.1"                                                          # Allow support for Jinja2 between 2.11 < x < 3
 packaging = "*"
-protobuf = { version = "^4.24.2", optional = true }
+protobuf = { version = ">=4.24.2,<6.0.0", optional = true }
 pykiso-python-uds = { version = "~3.2.0", optional = true }
 pylink-square = { version = "~1.2.0", optional = true }
 pyreadline3 = { version = "^3.4.1", python = "^3.5" }
